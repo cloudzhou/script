@@ -4,7 +4,7 @@ import urllib2
 import json
 from sets import Set
 """
-一个用来检测字符表里面是否有可用的拼音域名
+一个用来检测字符表里面是否有可用的拼音域名的脚本
 """
 f = codecs.open('data/pinyin.dic', encoding='utf-8')
 pinyin_dict = {}
