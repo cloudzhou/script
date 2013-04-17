@@ -2,3 +2,4 @@ for table in `mysql -u git -ppasswd db -e'show tables' |perl -pe 's/\|//g'|grep 
 do
     mysql -u git -ppasswd db -e"show create table $table";
 done
+
