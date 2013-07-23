@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-  
 #!/usr/bin/python
 
-import os, sys, codecs
+import os, sys, codecs, re
 
 basepath = '/tmp/ss'
 uniq_line = {}
 for filepath in os.listdir(basepath):
     abs_filepath = basepath + '/' + filepath
-    if not os.path.isfile(abs_filepath):
+    if not os.path.isfile(abs_filepath) or not re.match('.+\.py$', abs_filepath):
         continue
     filtered_line = []
     with codecs.open(abs_filepath, encoding='utf-8') as readF:
