@@ -19,3 +19,4 @@ for filepath in os.listdir(basepath):
     with codecs.open(abs_filepath, encoding='utf-8', mode='w+') as writeF:
         writeF.write(''.join(filtered_line))
         writeF.flush()
+    print 'aaa'
