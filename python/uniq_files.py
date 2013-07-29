@@ -20,3 +20,4 @@ for filepath in os.listdir(basepath):
         writeF.write(''.join(filtered_line))
         writeF.flush()
     print 'aaa'
+    print 'bbb'
