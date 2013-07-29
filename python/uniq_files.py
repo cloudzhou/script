@@ -21,3 +21,4 @@ for filepath in os.listdir(basepath):
         writeF.flush()
     print 'aaa'
     print 'bbb'
+    print 'ccc'
