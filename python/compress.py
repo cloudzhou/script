@@ -9,7 +9,6 @@ js = {
     'lib': [
         'js/jquery-1.7.2.min.js',
         'js/bootstrap.min.js',
-        'js/bootstrap/*.js',
         'js/select2.min.js',
         'js/app/underscore/underscore-min.js',
         'js/app/underscore/underscore.string.min.js',
@@ -19,14 +18,19 @@ js = {
         'js/less-1.4.0.min.js',
     ],
     'markdown': [
-        'js/Markdown*.js',
+        'js/Markdown.Converter.js',
+        'js/Markdown.Editor.js',
+        'js/Markdown.Sanitizer.js',
     ],
     'highcharts': [
         'js/app/highcharts/highcharts.js',
         'js/app/highcharts/themes/gitshell.js',
     ],
     'syntaxhighlighter': [
-        'js/app/syntaxhighlighter/*.js',
+        'js/app/syntaxhighlighter/shCore.js',
+        'js/app/syntaxhighlighter/shAutoloader.js',
+        'js/app/syntaxhighlighter/shLegacy.js',
+        'js/app/syntaxhighlighter/shBrush*.js',
     ],
     'gitshell': [
         'js/gitshell-template.js',
