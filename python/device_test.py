@@ -9,6 +9,9 @@ HOST = '114.215.177.97' # 'localhost'
 PORT = 8000
 TOKEN = '6af62e95120640d78a3cea447ba313832ca96a19' # '4340f23e0ceee9f7c550d76bd322d14296b24537'
 
+# {"nonce": 12306, "path": "/v1/datastreams/plug-status/datapoint/", "method": "POST", "body": {"datapoint": {"x": 14}}, "meta": {"Authorization": "token 10994e8b9cfdbb3029741f2223da65c8ddd27338"}}
+# {"nonce": 12306, "path": "/v1/datastreams/plug-status/datapoint/", "method": "GET", "meta": {"Authorization": "token 10994e8b9cfdbb3029741f2223da65c8ddd27338"}}
+
 if __name__ == '__main__':
     plug_status = 1
     _sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
