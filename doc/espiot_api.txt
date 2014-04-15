@@ -1,0 +1,237 @@
+
+1 there are multiple level of keys, user key, product key, device key etc... each has different permission for user or product or device, key permission: user > product -> device -> datastream
+2 owner and grant permission are all base on the keys:
+  a. each user has a list of devices to access. base on the keys the user had.
+  b. yes, we can hide the real device_id(numeric value). user access device through device key, so maybe do not need the device_ID.
+  c. identify and locate the devices by the device key and the first activate time, meta data can send to server by datastream API.
+
+On 04/13/2014 03:37 PM, Teo Swee Ann wrote:
+> hi yunzhou,
+> thanks for the great work. i have only had time today to understand your ideas.
+> here are my comments:
+> 1. after the registration, is the “token”, the token that is associated with only the user?
+> 2. “device_id” is given a numeric value of 0 here. here’s what i think:
+>    a. each user has a list of devices to access. 
+>    b. the real device id might not given to the user, but we will generate a user-device ID, based on part of the device_ID and user token. 
+>    c. this portion is directly about how we manage the list of devices. how to identify and locate the devices.
+>
+> we need to schedule a meeting to discuss in details about this, or do we already have discussed about this?
+> SA
+>
+>
+> On Mar 31, 2014, at 5:22 PM, wuyunzhou <> wrote:
+>
+>> all api url start with http://iotbucket.com/v1/, right now without ssl support, using http://www.jsoneditoronline.org/ to make json pretty formatted
+>>
+>> 1 user join:
+>>   Request:
+>>     curl -d 'username=cloudzhou&email=cloudzhou@163.com&password=espressif' http://iotbucket.com/v1/users/join/
+>>   Response:
+>>     {'status': 200, 'result': 'success', 'message': '请及时访问邮箱 cloudzhou@163.com 完成注册'}
+>>
+>> 2 get active url from join mail, curl it:
+>>   Request:
+>>     curl http://iotbucket.com/v1/users/join/validate/3bd69326b8471d6f6037194dc5c767c5/
+>>   Response:
+>>     {'status': 200, 'result': 'success', 'message': '创建用户成功，用户名：cloudzhou，用户邮箱：cloudzhou@163.com'}
+>>
+>> 3 get user key list, auto generate key if user key list is empty
+>>   Request:
+>>     curl -d '{"Authorization": {"username": "cloudzhou", "password": "espressif"}}' http://iotbucket.com/v1/keys/
+>>   Response:
+>>     {"keys": [{"updated": 1396217604.0, "user_id": 1, "name": "key of user: cloudzhou", "created": 1396217604.0, "source_ip": "*", "visibly": 1, "id": 1, "datastream_tmpl_id": 0, "token": "1a7392afd0283d5cb869b5060be78af310c8a657", "access_methods": "*", "scope": 1, "product_id": 0, "activate_status": 1, "datastream_id": 0, "device_id": 0}]}
+>>
+>> ### from now on, you can use the use key to manage product, device, datastreamTmpl, datastream, datapoint etc.. (except the user, key manager, that require username and password) ###
+>>
+>> 4 create product, device and datastreamTmpl at one request:
+>>   Request:
+>>     curl -H "Authorization: token 1a7392afd0283d5cb869b5060be78af310c8a657" -d '{"product":{"name":"PowerPlugProduct"},"device":{"name":"deviceplug1"},"datastreamTmpls":[{"name":"plug-status","description":"plug-status1:on,0:off","stream_type":"1","dimension":"1","tags":"plug","unit":"boolean","symbol":"on/off"}]}' http://iotbucket.com/v1/device/deployed/
+>>
+>> the request body(pretty formatted, all fields are required):
+>> {
+>>   "product": {"name": "Power Plug Product"},
+>>   "device": {"name": "device plug 1"},
+>>   "datastreamTmpls": [
+>>     {
+>>       "name": "plug-status",
+>>       "description": "plug-status 1: on, 0: off",
+>>       "stream_type": "1",
+>>       "dimension": "1",
+>>       "tags": "plug",
+>>       "unit": "boolean",
+>>       "symbol": "on/off"
+>>     }
+>>   ]
+>> }
+>>
+>> Response(pretty formatted):
+>> {
+>>   "device": {
+>>     "status": 2,
+>>     "updated": 1396223550,
+>>     "last_pull": 1396223550,
+>>     "product_id": 12,
+>>     "last_active": 1396223550,
+>>     "created": 1396223550,
+>>     "activated_at": 1396223550,
+>>     "visibly": 1,
+>>     "last_push": 1396223550,
+>>     "name": "deviceplug1",
+>>     "activate_status": 1,
+>>     "location": "",
+>>     "is_frozen": 0,
+>>     "key_id": 11,
+>>     "serial": "637949a9",
+>>     "metadata": "",
+>>     "id": 10,
+>>     "is_private": 1,
+>>     "description": "description Of device(serial: 637949a9)"
+>>   },
+>>   "device_key": {
+>>     "updated": 1396223550,
+>>     "user_id": 1,
+>>     "name": "key of device_id: 10",
+>>     "created": 1396223550,
+>>     "source_ip": "*",
+>>     "visibly": 1,
+>>     "id": 11,
+>>     "datastream_tmpl_id": 0,
+>>     "token": "4340f23e0ceee9f7c550d76bd322d14296b24537",
+>>     "access_methods": "*",
+>>     "scope": 3,
+>>     "product_id": 0,
+>>     "activate_status": 1,
+>>     "datastream_id": 0,
+>>     "device_id": 10
+>>   },
+>>   "product": {
+>>     "status": 2,
+>>     "updated": 1396223550,
+>>     "name": "PowerPlugProduct",
+>>     "creator_name": "cloudzhou",
+>>     "created": 1396223550,
+>>     "visibly": 1,
+>>     "secret": "",
+>>     "activated_devices_count": 1,
+>>     "creator_user_id": 1,
+>>     "serial": "982ee7a7",
+>>     "devices_count": 1,
+>>     "id": 12,
+>>     "is_private": 1,
+>>     "description": "description Of product(serial: 982ee7a7)"
+>>   },
+>>   "datastreamTmpls": [
+>>     {
+>>       "updated": 1396223550,
+>>       "description": "plug-status1:on,0:off",
+>>       "name": "plug-status",
+>>       "created": 1396223550,
+>>       "symbol": "on/off",
+>>       "tags": "plug",
+>>       "stream_type": 1,
+>>       "visibly": 1,
+>>       "id": 1,
+>>       "dimension": 1,
+>>       "unit": "boolean",
+>>       "product_id": 12
+>>     }
+>>   ]
+>> }
+>>
+>> ### using device key for single device, get key from device_key.token from step 4. ###
+>>
+>> 5 get detail device info by device key
+>>   Request:
+>>     curl -H "Authorization: token 4340f23e0ceee9f7c550d76bd322d14296b24537" http://iotbucket.com/v1/device/
+>>   Response:
+>>     {"device": {"status": 2, "updated": 1396223550.0, "last_pull": 1396223550.0, "product_id": 12, "last_active": 1396223550.0, "created": 1396223550.0, "activated_at": 1396223550.0, "visibly": 1, "last_push": 1396223550.0, "name": "deviceplug1", "activate_status": 1, "location": "", "is_frozen": 0, "key_id": 11, "serial": "637949a9", "metadata": "", "id": 10, "is_private": 1, "description": "description Of device(serial: 637949a9)"}}
+>>
+>> 6 update device datastream with name "plug-status"
+>>   Request:
+>>     curl -H "Authorization: token 4340f23e0ceee9f7c550d76bd322d14296b24537" -d '{"datapoint": {"x": 1}}' http://iotbucket.com/v1/datastreams/plug-status/datapoint/
+>>   Response:
+>>     {"datapoint": {"updated": 1396227805.0, "created": 1396227805.0, "visibly": 1, "datastream_id": 1, "at": 1396256605.0, "x": 1, "id": 4}}
+>>
+>> 7 get latest value from device datastream with name "plug-status"
+>>   Request:
+>>     curl -H "Authorization: token 4340f23e0ceee9f7c550d76bd322d14296b24537" http://iotbucket.com/v1/datastreams/plug-status/datapoint/
+>>   Response:
+>>     {"datapoint": {"updated": 1396227852.0, "created": 1396227852.0, "visibly": 1, "datastream_id": 1, "at": 1396227852.0, "x": 1, "id": 5}}
+>>
+>> 8 get the Historical Data with name "plug-status"
+>>   Request:
+>>     curl -H "Authorization: token 4340f23e0ceee9f7c550d76bd322d14296b24537" http://iotbucket.com/v1/datastreams/plug-status/datapoints/
+>>   Response:
+>>     {"datapoints": [{"updated": 1396227852.0, "created": 1396227852.0, "visibly": 1, "datastream_id": 1, "at": 1396227852.0, "x": 1, "id": 5}, {"updated": 1396227805.0, "created": 1396227805.0, "visibly": 1, "datastream_id": 1, "at": 1396227805.0, "x": 1, "id": 4}, {"updated": 1396227802.0, "created": 1396227802.0, "visibly": 1, "datastream_id": 1, "at": 1396227802.0, "x": 1, "id": 3}, {"updated": 1396227756.0, "created": 1396227756.0, "visibly": 1, "datastream_id": 1, "at": 1396227756.0, "x": 1, "id": 2}, {"updated": 1396227743.0, "created": 1396227743.0, "visibly": 1, "datastream_id": 1, "at": 1396227743.0, "x": 1, "id": 1}]}
+>>
+>> Response(pretty formatted):
+>> {
+>>   "datapoints": [
+>>     {
+>>       "updated": 1396227852,
+>>       "created": 1396227852,
+>>       "visibly": 1,
+>>       "datastream_id": 1,
+>>       "at": 1396227852,
+>>       "x": 1,
+>>       "id": 5
+>>     },
+>>     {
+>>       "updated": 1396227805,
+>>       "created": 1396227805,
+>>       "visibly": 1,
+>>       "datastream_id": 1,
+>>       "at": 1396227805,
+>>       "x": 1,
+>>       "id": 4
+>>     },
+>>     {
+>>       "updated": 1396227802,
+>>       "created": 1396227802,
+>>       "visibly": 1,
+>>       "datastream_id": 1,
+>>       "at": 1396227802,
+>>       "x": 1,
+>>       "id": 3
+>>     },
+>>     {
+>>       "updated": 1396227756,
+>>       "created": 1396227756,
+>>       "visibly": 1,
+>>       "datastream_id": 1,
+>>       "at": 1396227756,
+>>       "x": 1,
+>>       "id": 2
+>>     },
+>>     {
+>>       "updated": 1396227743,
+>>       "created": 1396227743,
+>>       "visibly": 1,
+>>       "datastream_id": 1,
+>>       "at": 1396227743,
+>>       "x": 1,
+>>       "id": 1
+>>     }
+>>   ]
+>> }
+>>
+>> the next thing is to run the server, so all of us can access it in public.
+>> and design the socket server.
+>>
+>> On 03/31/2014 04:48 PM, Cai Shang Lin wrote:
+>>>
+>>> On 3/30/2014 10:10 PM, Teo Swee Ann wrote:
+>>>> hi all,
+>>>> here’s a write-up on the proposed model of connectivity between the devices and user and server.
+>>>> after printing this, i realized that we should use 256-bit hash for user-token, 64 bit may be too easy to break. 
+>>>> the password is iot_group_001.
+>>>> please email me the comments. 
+>>>> SA
+>>>>
+>>>>
+>>>>
+>>>>
+>>>
+>>
+>> -- 
+>> 
