@@ -1,3 +1,5 @@
 get plug status: {"path": "/v1/datastreams/plug-status/datapoints/", "method": "GET", "meta": {"Authorization": "token 10994e8b9cfdbb3029741f2223da65c8ddd27338"}}
 update plug status: {"path": "/v1/datastreams/plug-status/datapoints/", "method": "POST", "body": {"datapoint":{"x":1}}, "meta": {"Authorization": "token 10994e8b9cfdbb3029741f2223da65c8ddd27338"}}
 1: open the plug, 0: close the plug
+response = '{"status": 200, "datapoint": {"x": %s}, "nonce": %s, "is_query_device": true}\n' % (plug_status, nonce)
+
