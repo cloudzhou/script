@@ -5,3 +5,4 @@ response = '{"path": "/v1/datastreams/plug-status/datapoint/", "status": 200, "d
 
 
 '{"nonce": 12306, "path": "/v1/device/", "method": "GET", "meta": {"Authorization": "token %s"}}\n' % TOKEN
+master device key: 6af62e95120640d78a3cea447ba313832ca96a19
