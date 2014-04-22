@@ -6,3 +6,6 @@ response = '{"path": "/v1/datastreams/plug-status/datapoint/", "status": 200, "d
 
 '{"nonce": 12306, "path": "/v1/device/", "method": "GET", "meta": {"Authorization": "token %s"}}\n' % TOKEN
 master device key: 6af62e95120640d78a3cea447ba313832ca96a19
+
+activate:
+{"path": "/v1/device/activate/", "method": "POST", "body": {"encrypt_method": "PLAIN", "token": "1234567890123456789012345678901234567890"}, "meta": {"Authorization": "token 10994e8b9cfdbb3029741f2223da65c8ddd27338"}}
