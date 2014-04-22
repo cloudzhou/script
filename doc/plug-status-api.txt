@@ -1,3 +1,29 @@
+
+user A key: c8922638bb6ec4c18fcf3e44ce9955f19fa3ba12 (cloudzhou@163.com)
+user B key: 3c84ebe6a9eb554b2810ade3f381d9c75fbf9204 (wuyunzhou@espressif.com)
+device master key: 6d9542d12d17e69c2d4260f09ee5a72464565e22
+device owner key: 361a62ab75a75af2d5bc793f458ab5c59dd9cd83
+device 3party key: 35b0316f381ae41cefbdbbec9c38559c4f2ef3a3
+
+1 curl -d 'username=cloudzhou&email=cloudzhou@163.com&password=espressif' http://iotbucket.com/v1/users/join/
+2 curl http://iotbucket.com/v1/users/join/validate/afba22d0c4a4df1f408a2cdbf2a0d672296a9975/
+3 curl -d '{"Authorization": {"username": "cloudzhou", "password": "espressif"}}' http://iotbucket.com/v1/keys/
+4 curl -H "Authorization: token c8922638bb6ec4c18fcf3e44ce9955f19fa3ba12" -d '{"product":{"name":"PowerPlugProduct"},"device":{"name":"deviceplug1"},"datastreamTmpls":[{"name":"plug-status","description":"plug-status1:on,0:off","stream_type":"1","dimension":"1","tags":"plug","unit":"boolean","symbol":"on/off"}]}' http://iotbucket.com/v1/device/deployed/
+5 curl -H "Authorization: token 6d9542d12d17e69c2d4260f09ee5a72464565e22" http://iotbucket.com/v1/device/
+6 curl -H "Authorization: token 6d9542d12d17e69c2d4260f09ee5a72464565e22" -d '{"datapoint": {"x": 1}}' http://iotbucket.com/v1/datastreams/plug-status/datapoint/
+7 curl -H "Authorization: token 6d9542d12d17e69c2d4260f09ee5a72464565e22" http://iotbucket.com/v1/datastreams/plug-status/datapoint/
+8 curl -H "Authorization: token 6d9542d12d17e69c2d4260f09ee5a72464565e22" http://iotbucket.com/v1/datastreams/plug-status/datapoints/
+
+new api:
+init:
+1 curl -H "Authorization: token 6d9542d12d17e69c2d4260f09ee5a72464565e22" -d '{"encrypt_method": "PLAIN", "token": "1234567890123456789012345678901234567890"}' http://iotbucket.com/v1/device/activate/
+2 curl -H "Authorization: token c8922638bb6ec4c18fcf3e44ce9955f19fa3ba12" -d '{"token": "1234567890123456789012345678901234567890"}' http://iotbucket.com/v1/key/authorize/
+3 curl -H "Authorization: token c8922638bb6ec4c18fcf3e44ce9955f19fa3ba12" http://iotbucket.com/v1/user/devicekeys/
+share:
+4 curl -H "Authorization: token 361a62ab75a75af2d5bc793f458ab5c59dd9cd83" -d '{"name": "share test name", "scope": "device", "device_id": 1}' http://iotbucket.com/v1/key/share/
+2 curl -H "Authorization: token 3c84ebe6a9eb554b2810ade3f381d9c75fbf9204" -d '{"token": "90436cf90322d39de51565b1df9c6989e9ace6bf"}' http://iotbucket.com/v1/key/authorize/
+
+==============================================================
 get plug status: {"path": "/v1/datastreams/plug-status/datapoint/", "method": "GET", "meta": {"Authorization": "token 10994e8b9cfdbb3029741f2223da65c8ddd27338"}}
 update plug status: {"path": "/v1/datastreams/plug-status/datapoint/", "method": "POST", "body": {"datapoint":{"x":1}}, "meta": {"Authorization": "token 10994e8b9cfdbb3029741f2223da65c8ddd27338"}}
 1: open the plug, 0: close the plug
