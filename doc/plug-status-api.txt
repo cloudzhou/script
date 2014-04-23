@@ -19,9 +19,10 @@ init:
 1 curl -H "Authorization: token 6d9542d12d17e69c2d4260f09ee5a72464565e22" -d '{"encrypt_method": "PLAIN", "token": "1234567890123456789012345678901234567890"}' http://iotbucket.com/v1/device/activate/
 2 curl -H "Authorization: token c8922638bb6ec4c18fcf3e44ce9955f19fa3ba12" -d '{"token": "1234567890123456789012345678901234567890"}' http://iotbucket.com/v1/key/authorize/
 3 curl -H "Authorization: token c8922638bb6ec4c18fcf3e44ce9955f19fa3ba12" http://iotbucket.com/v1/user/devicekeys/
+4 curl -H "Authorization: token c8922638bb6ec4c18fcf3e44ce9955f19fa3ba12" http://iotbucket.com/v1/user/devices/
 share:
-4 curl -H "Authorization: token 361a62ab75a75af2d5bc793f458ab5c59dd9cd83" -d '{"name": "share test name", "scope": "device", "device_id": 1}' http://iotbucket.com/v1/key/share/
-2 curl -H "Authorization: token 3c84ebe6a9eb554b2810ade3f381d9c75fbf9204" -d '{"token": "90436cf90322d39de51565b1df9c6989e9ace6bf"}' http://iotbucket.com/v1/key/authorize/
+5 curl -H "Authorization: token 361a62ab75a75af2d5bc793f458ab5c59dd9cd83" -d '{"name": "share test name", "scope": "device", "device_id": 1}' http://iotbucket.com/v1/key/share/
+6 curl -H "Authorization: token 3c84ebe6a9eb554b2810ade3f381d9c75fbf9204" -d '{"token": "90436cf90322d39de51565b1df9c6989e9ace6bf"}' http://iotbucket.com/v1/key/authorize/
 
 ==============================================================
 get plug status: {"path": "/v1/datastreams/plug-status/datapoint/", "method": "GET", "meta": {"Authorization": "token 10994e8b9cfdbb3029741f2223da65c8ddd27338"}}
