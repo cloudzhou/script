@@ -1,4 +1,5 @@
 device1 master key: b7b266e58597d4261f98d8c02c3fa0eba4e0c337
+device1 owner key:  fdea987306b5401400b1bdf03e755622ebb702a9
 device2 master key: 1146c238648aab05a975da949e0ce960644d3d79
 device3 master key: 3aa60fb1e2c0be2f89cc32be49e0df635a73ec52
 device4 master key: cb8ea983e4495891264afd81714cd6599b7f0cb4
