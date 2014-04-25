@@ -1,3 +1,8 @@
+1 create new datastreamTmpl: curl -H "Authorization: token e3913029e4404052e7ea454b0c91d2e0de1b5270" -d '{"datastreamTmpls": [{"name":"tem-hum","description":"record temperature and humidity ","stream_type":"1","dimension":"2","tags":"tem, hum","unit":"","symbol":""}]}' http://iotbucket.com/v1/products/1/datastreamTmpls/
+2 create new datapoint: curl -H "Authorization: token 98dcec0bf1e84c049e2afa3303837dc65200d4d2" -d '{"datapoint": {"x": 1, "y": 2}}' http://iotbucket.com/v1/datastreams/tem-hum/datapoint/
+3 get single datapoint: curl -H "Authorization: token 98dcec0bf1e84c049e2afa3303837dc65200d4d2" http://iotbucket.com/v1/datastreams/tem-hum/datapoint/
+4 get multi datapoints: curl -H "Authorization: token 98dcec0bf1e84c049e2afa3303837dc65200d4d2" http://iotbucket.com/v1/datastreams/tem-hum/datapoints/
+
 ping: echo '{"path": "/v1/ping"}' | nc iotbucket.com 8000
 
 device1 master key: b7b266e58597d4261f98d8c02c3fa0eba4e0c337
