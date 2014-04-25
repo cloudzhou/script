@@ -1,3 +1,5 @@
+ping: echo '{"path": "/v1/ping"}' | nc iotbucket.com 8000
+
 device1 master key: b7b266e58597d4261f98d8c02c3fa0eba4e0c337
 device1 owner key:  74cbfa37a68e4e7825a754e45de678dc81790b21
 device2 master key: 1146c238648aab05a975da949e0ce960644d3d79
@@ -45,3 +47,4 @@ activate:
 {"path": "/v1/device/activate/", "method": "POST", "body": {"encrypt_method": "PLAIN", "token": "1234567890123456789012345678901234567890"}, "meta": {"Authorization": "token 10994e8b9cfdbb3029741f2223da65c8ddd27338"}}
 
 {"token": "2234567890123456789012345678901234567890"}
+
