@@ -12,6 +12,7 @@ device3 master key: 3aa60fb1e2c0be2f89cc32be49e0df635a73ec52
 device4 master key: cb8ea983e4495891264afd81714cd6599b7f0cb4
 device5 master key: 8d404af016981b3846161b88e1be7e8d08a20439
 device6 master key: 20dd316acf9c3f0f9347c27fab14d77bd98458ac
+device6 3party key: 3abbb8ada49183461be34a7ce416110647ea9d20
 
 user A key: c8922638bb6ec4c18fcf3e44ce9955f19fa3ba12 (cloudzhou@163.com)
 user B key: 3c84ebe6a9eb554b2810ade3f381d9c75fbf9204 (wuyunzhou@espressif.com)
