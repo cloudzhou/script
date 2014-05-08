@@ -1,5 +1,8 @@
 create new devices: curl -H "Authorization: token c8922638bb6ec4c18fcf3e44ce9955f19fa3ba12" -d '{"devices": [{"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}, {"serial": "1"}]}' http://114.215.177.97/v1/products/1/devices/
 
+master-device-key: 9ae5ddc81f8bbb9d34e51223cd8e1c01edd36921
+owner-device-key: 32bd40629d441760ac19917b5cb84964d61e4d90
+
 {
   "status": 200,
   "devices": [
