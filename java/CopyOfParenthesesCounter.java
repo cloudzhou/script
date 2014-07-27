@@ -26,15 +26,14 @@ public class CopyOfParenthesesCounter {
         }
         int stack = 0;
         int totalNum = 0;
-        int left = 0;
-        int right = 0;
+        int compare = 0;
         for (char c : param.toCharArray()) {
             if (c == LEFT) {
-                left++;
+                compare++;
                 stack++;
             }
             if (c == RIGHT) {
-                right++;
+                compare--;
                 if (stack > 0) {
                     stack--;
                     totalNum++;
@@ -46,10 +45,10 @@ public class CopyOfParenthesesCounter {
             System.out.println("the number of () is " + totalNum + ", the whole string are valid syntax");
         } else {
             System.out.print("the number of () is " + totalNum + ", the syntax is invalid. ");
-            if (left < right) {
-                System.out.println("there are " + (right - left) + " consecutive right parenthesis");
+            if (compare > 0) {
+                System.out.println("there are " + compare + " consecutive left parenthesis");
             } else {
-                System.out.println("there are " + (left - right) + " consecutive left parenthesis");
+                System.out.println("there are " + (-compare) + " consecutive right parenthesis");
             }
 
         }
