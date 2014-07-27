@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys
 
 #numarr = [7, 4, 3, 9]
 numarr = [1, 2, 3, 4, 2, 3, 5]
@@ -12,7 +13,7 @@ _sum = sum(numarr)
 # 3 divi 2
 if (_sum % 2) == 1:
     print 'NO'
-    # return
+    sys.exit(128)
 
 half_sum = _sum / 2
 
