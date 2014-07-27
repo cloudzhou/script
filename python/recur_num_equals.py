@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-#numarr = [7, 4, 2, 9]
+#numarr = [7, 4, 3, 9]
 numarr = [1, 2, 3, 4, 2, 3, 5]
 
 # 1 sort array
@@ -30,6 +30,7 @@ def numarr_equals(numarr, index, value):
         return True
     if numarr_equals(numarr, index, value):
         return True
+    return False
 
 print numarr_equals(numarr, 0, half_sum)
 
