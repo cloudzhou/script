@@ -46,22 +46,25 @@ local function route(response)
     end
     local line = string.sub(buffer, 1, i-1)
     buffer = string.sub(buffer, i+1, -1)
-    local path = getStr(response, 'path')
+    local path = getStr(line, 'path')
     if path == nil then
         return
     end
-    local nonce = getNumber(response, 'nonce')
+    local nonce = getNumber(line, 'nonce')
     local datastreamName = string.gmatch(path, '/v1/datastreams/([a-z-_.]+)/datapoint/?')()
     if datastreamName then
         func = datapointMapFunc[datastreamName]
         if func ~= nil then
             local datapoint = {}
-            datapoint['x'] = getNumber(response, 'x')
-            datapoint['y'] = getNumber(response, 'y')
-            datapoint['z'] = getNumber(response, 'z')
-            datapoint['k'] = getNumber(response, 'k')
-            datapoint['l'] = getNumber(response, 'l')
+            datapoint['x'] = getNumber(line, 'x')
+            datapoint['y'] = getNumber(line, 'y')
+            datapoint['z'] = getNumber(line, 'z')
+            datapoint['k'] = getNumber(line, 'k')
+            datapoint['l'] = getNumber(line, 'l')
             local result = func(datastreamName, datapoint)
+            print(line)
+            print(result)
+            print(nonce)
             if result and nonce then
                 conn:send('{"status": 200, "nonce": '..nonce..'}\n')
             end
