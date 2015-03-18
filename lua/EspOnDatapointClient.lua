@@ -7,7 +7,6 @@ local devicekey = nil
 local server = '115.29.202.58' -- iot.espressif.cn
 local port = 8000
 
-local rpcMapFunc = {}
 local datapointMapFunc = {}
 
 local keepAliveTime = 60000
@@ -49,18 +48,6 @@ local function route(response)
     buffer = string.sub(buffer, i+1, -1)
     local path = getStr(response, 'path')
     local nonce = getNumber(response, 'nonce')
-    local rpc = string.gmatch(path, '/v1/device/rpc/?')()
-    if rpc then
-        action = getStr(response, 'action')
-        func = rpcMapFunc[action]
-        if func ~= nil then
-            local result = func(action, {})
-            if result and nonce then
-                conn:send('{"status": 200, "nonce": '..nonce..'}\n')
-            end
-        end
-        return true
-    end
     local datastreamName = string.gmatch(path, '/v1/datastreams/([a-z-_.]+)/datapoint/?')()
     if datastreamName then
         func = datapointMapFunc(datastreamName)
@@ -97,9 +84,7 @@ local function connect()
         route(response)
     end)
     conn:on('sent', function(sck, response)
-        print('sent at '..tmr.now())
     end)
-    print('connecting at '..tmr.now())
     conn:connect(port, server)
 end
 
@@ -129,9 +114,5 @@ end
 ----
 function M.onDatapoint(datastreamName, datapointFunc)
     datapointMapFunc[datastreamName] = datapointFunc
-end
-
-function M.onRpc(action, rpcFunc)
-    rpcMapFunc[action] = rpcFunc
 end
 
