@@ -76,7 +76,7 @@ local function getNumber(str, key)
 end
 
 local function connect()
-    socket = net.createConnection(net.TCP, 0)
+    socket = net.createConnection(net.TCP, false)
     socket:on('connection', function(sck, response)
         print('connected at '..tmr.now())
         isConnected = true
