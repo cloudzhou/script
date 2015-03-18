@@ -2,41 +2,44 @@
 -- EspClient module for NODEMCU
 -- LICENCE: http://opensource.org/licenses/MIT
 -- cloudzhou<wuyunzhou@espressif.com>
--- inspired by yangbo
 --------------------------------------
 
 --[[
-get EspClient.lua from remote:
-function receive(conn, pl)
-    print("1\n")
-    print(pl)
-end
+get EspClient.lua from remote server via http:
+script = ''
 conn = net.createConnection(net.TCP, false) 
-conn:on("receive", receive)
+conn:on("receive", function(conn, pl) script = script..pl end)
 conn:connect(80, "115.29.202.58")
-conn:send("GET /static/script/EspClient.lua HTTP/1.0\r\nHost: iot.espressif.cn\r\n"
+conn:send("GET /static/script/Upgrader.lua HTTP/1.0\r\nHost: iot.espressif.cn\r\n"
     .."Connection: close\r\nAccept: */*\r\n\r\n")
-
+i, j = string.find(script, '\r\n\r\n')
+script = string.sub(script, j+1, -1)
+file.open("EspClient.lua", "w")
+file.write(script)
+file.close()
+node.restart()
 
 demo.lua:
-
 require("EspClient")
 EspClient.init("513d09340e29eb61f91f5cb4e717682c48444d6f")
+EspClient.run()
 
--- datapoint
+-- send datapoint
+datapoint = {}
+datapoint['x'] = 1
+EspClient.datapoint("light", datapoint)
+
+-- on datapoint
 function light(datastreamName, datapoint)
    print("test function!"..datapoint.x)
 end
-EspClient.datapoint("light", light)
+EspClient.onDatapoint("light", light)
 
--- rpc
+-- on rpc
 function rpc(action, parameters)
    print("test function!"..action)
 end
-EspClient.rpc("action", rpc)
-
--- run
-EspClient.run()
+EspClient.onRpc("action", rpc)
 
 ]]--
 
@@ -52,13 +55,13 @@ local port = 8000
 local rpcMapFunc = {}
 local datapointMapFunc = {}
 
-local keepAliveTime = 50000
+local keepAliveTime = 60000
 local isConnected = false
 local isDebug = false
 local buffer = nil
 
 local function getStr(str, key)
-    for k in string.gmatch(str, '.*"'..key..'" *: *"(%w+)".*') do
+    for k in string.gmatch(str, '.*"'..key..'" *: *"([^"]+)".*') do
         if k ~= nil then
             return k
         end
@@ -100,7 +103,7 @@ local function route(response)
     buffer = buffer..response
     local i, j = string.find(buffer, '\n')
     if i == nil then
-        return nil
+        return false
     end
     local line = string.sub(buffer, 1, i-1)
     buffer = string.sub(buffer, i+1, -1)
@@ -113,9 +116,10 @@ local function route(response)
         if func ~= nil then
             local result = func(action, {})
             if result and nonce then
-                conn:send('{"status": 200, "nonce": '..nonce..'}')
+                conn:send('{"status": 200, "nonce": '..nonce..'}\n')
             end
         end
+        return true
     end
     local datastreamName = string.gmatch(path, '/v1/datastreams/([a-z-_.]+)/datapoint/?')()
     if datastreamName then
@@ -129,13 +133,14 @@ local function route(response)
             datapoint['l'] = getNumber(response, 'l')
             local result = func(datastreamName, datapoint)
             if result and nonce then
-                conn:send('{"status": 200, "nonce": '..nonce..'}')
+                conn:send('{"status": 200, "nonce": '..nonce..'}\n')
             end
         end
+        return true
     end
 
     print('unsupport command')
-    return nil
+    return false
 end
 
 local function keepAlive()
@@ -148,7 +153,7 @@ local function keepAlive()
 end
 ----
 function M.init(devicekey)
-    if devicekey == nil then
+    if devicekey == nil or devicekey == '' then
         assert(false, 'devicekey must be valid')
     end
     devicekey = devicekey
@@ -162,6 +167,33 @@ function M.run()
 end
 
 ----
+function M.datapoint(datastreamName, datapoint)
+    datapointStr = ''
+    if datapoint.at ~= nil then
+        datapointStr = datapointStr..'"at": "'..datapoint.at..'", '
+    end
+    if datapoint.x ~= nil then
+        datapointStr = datapointStr..'"x": '..datapoint.x..', '
+    end
+    if datapoint.y ~= nil then
+        datapointStr = datapointStr..'"y": '..datapoint.y..', '
+    end
+    if datapoint.z ~= nil then
+        datapointStr = datapointStr..'"z": '..datapoint.z..', '
+    end
+    if datapoint.k ~= nil then
+        datapointStr = datapointStr..'"k": '..datapoint.k..', '
+    end
+    if datapoint.l ~= nil then
+        datapointStr = datapointStr..'"l": '..datapoint.l..', '
+    end
+    if datapointStr == '' then
+        return
+    end
+    datapointStr = string.sub(datapointStr, 0, -3)
+    conn:send('{"path": "/v1/datastreams/'..datastreamName..'/datapoint/", "method": "POST", "meta": {"Authorization": "token '..devicekey..'"}, "body": {"datapoint":{'..datapointStr..'}}}\n')
+end
+
 function M.onDatapoint(datastreamName, datapointFunc)
     datapointMapFunc[datastreamName] = datapointFunc
 end
