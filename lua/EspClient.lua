@@ -44,7 +44,7 @@ local moduleName = ...
 local M = {}
 _G[moduleName] = M
 
-local socket = nil
+local conn = nil
 local devicekey = nil
 local server = '115.29.202.58' -- iot.espressif.cn
 local port = 8000
@@ -52,7 +52,7 @@ local port = 8000
 local rpcMapFunc = {}
 local datapointMapFunc = {}
 
-local keepAliveTime = 50
+local keepAliveTime = 50000
 local isConnected = false
 local isDebug = false
 local buffer = nil
@@ -76,24 +76,24 @@ local function getNumber(str, key)
 end
 
 local function connect()
-    socket = net.createConnection(net.TCP, false)
-    socket:on('connection', function(sck, response)
+    conn = net.createConnection(net.TCP, false)
+    conn:on('connection', function(sck, response)
         print('connected at '..tmr.now())
         isConnected = true
     end)
-    socket:on('disconnection', function(sck, response)
+    conn:on('disconnection', function(sck, response)
         print('disconnect at '..tmr.now())
         isConnected = false
         connect()
     end)
-    socket:on('receive', function(sck, response)
+    conn:on('receive', function(sck, response)
         route(response)
     end)
-    socket:on('sent', function(sck, response)
+    conn:on('sent', function(sck, response)
         print('sent at '..tmr.now())
     end)
     print('connecting at '..tmr.now())
-    socket:connect(port, server)
+    conn:connect(port, server)
 end
 
 local function route(response)
@@ -113,7 +113,7 @@ local function route(response)
         if func ~= nil then
             local result = func(action, {})
             if result and nonce then
-                socket:send('{"status": 200, "nonce": '..nonce..'}')
+                conn:send('{"status": 200, "nonce": '..nonce..'}')
             end
         end
     end
@@ -129,7 +129,7 @@ local function route(response)
             datapoint['l'] = getNumber(response, 'l')
             local result = func(datastreamName, datapoint)
             if result and nonce then
-                socket:send('{"status": 200, "nonce": '..nonce..'}')
+                conn:send('{"status": 200, "nonce": '..nonce..'}')
             end
         end
     end
@@ -141,7 +141,7 @@ end
 local function keepAlive()
     local pingstr = '{"path": "/v1/ping/", "method": "GET", "meta": {"Authorization": "token '..devicekey..'"}}\n'
     if isConnected == true then
-        socket:send(pingstr)
+        conn:send(pingstr)
     else
         connectServer()         
     end
@@ -162,11 +162,11 @@ function M.run()
 end
 
 ----
-function M.datapoint(datastreamName, datapointFunc)
+function M.onDatapoint(datastreamName, datapointFunc)
     datapointMapFunc[datastreamName] = datapointFunc
 end
 
-function M.rpc(action, rpcFunc)
+function M.onRpc(action, rpcFunc)
     rpcMapFunc[action] = rpcFunc
 end
 
