@@ -83,6 +83,7 @@ local function connect()
     conn:on('connection', function(sck, response)
         print('connected at '..tmr.now())
         isConnected = true
+        identify()
     end)
     conn:on('disconnection', function(sck, response)
         print('disconnect at '..tmr.now())
@@ -147,8 +148,6 @@ local function identify()
     local identifystr = '{"path": "/v1/device/identify/", "method": "POST", "meta": {"Authorization": "token '..devicekey..'"}}\n'
     if isConnected == true then
         conn:send(identifystr)
-    else
-        connectServer()
     end
 end
 
