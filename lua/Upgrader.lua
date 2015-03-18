@@ -18,7 +18,7 @@ local header = ''
 local isTruncated = false
 local function save(filename, response)
     if isTruncated then
-        file.writeline(response)
+        file.write(response)
         return
     end
     header = header..response
@@ -27,7 +27,7 @@ local function save(filename, response)
         return
     end
     prefixBody = string.sub(header, j+1, -1)
-    file.writeline(prefixBody)
+    file.write(prefixBody)
     header = ''
     isTruncated = true
     return
@@ -40,28 +40,33 @@ function M.update(filename, url)
     if ip == nil then
         return false
     end
-    if port == nil then
-        prot = 80
+    if port == nil or port == '' then
+        port = 80
     end
-    if path == '' then
+    port = port + 0
+    if path == nil or path == '' then
         path = '/'
     end
-    socket = net.createConnection(net.TCP, false)
-    socket:on('receive', function(sck, response)
+    conn = net.createConnection(net.TCP, false)
+    conn:on('receive', function(sck, response)
         save(filename, response)
     end)
-    socket:on('disconnection', function(sck, response)
-        print('disconnect at '..tmr.now())
-        header = ''
-        isTruncated = false
-        file.close()
+    conn:on('disconnection', function(sck, response)
+        local function reset()
+            header = ''
+            isTruncated = false
+            file.close()
+            tmr.stop(0)
+            print(filename..' saved')
+        end
+        tmr.alarm(0, 2000, 1, reset)
     end)
-    socket:connect(port, ip)
+    conn:connect(port, ip)
     conn:send('GET '..path..' HTTP/1.0\r\nHost: '..ip..'\r\n'
     ..'Connection: close\r\nAccept: */*\r\n\r\n')
 end
 
 function M.updateEspClient()
-    return M.update('EspClient.lua', 'http://115.29.202.58/static/lua/EspClient.lua')
+    return M.update('EspClient.lua', 'http://115.29.202.58/static/script/EspClient.lua')
 end
 
