@@ -9,7 +9,6 @@ local port = 8000
 
 local keepAliveTime = 60000
 local isConnected = false
-local buffer = nil
 
 local function getStr(str, key)
     for k in string.gmatch(str, '.*"'..key..'" *: *"([^"]+)".*') do
@@ -30,7 +29,6 @@ local function getNumber(str, key)
 end
 
 local function identify()
-    print(devicekey)
     local identifystr = '{"path": "/v1/device/identify/", "method": "POST", "meta": {"Authorization": "token '..devicekey..'"}}\n'
     if isConnected == true then
         conn:send(identifystr)
@@ -38,18 +36,15 @@ local function identify()
 end
 
 local function route(response)
-    print(response)
 end
 
 local function connect()
     conn = net.createConnection(net.TCP, false)
     conn:on('connection', function(sck, response)
-        print('connected at '..tmr.now())
         isConnected = true
         identify()
     end)
     conn:on('disconnection', function(sck, response)
-        print('disconnect at '..tmr.now())
         isConnected = false
         connect()
     end)
@@ -57,9 +52,7 @@ local function connect()
         route(response)
     end)
     conn:on('sent', function(sck, response)
-        print('sent at '..tmr.now())
     end)
-    print('connecting at '..tmr.now())
     conn:connect(port, server)
 end
 
@@ -74,10 +67,9 @@ end
 ----
 function M.init(key)
     if key == nil or key == '' then
-        assert(false, 'devicekey must be valid')
+        assert(false, 'need key')
     end
     devicekey = key
-    print(devicekey)
 end
 
 function M.run()
@@ -119,5 +111,4 @@ end
 function M.setKeepAliveTime(t)
     keepAliveTime = t
 end
-
 
