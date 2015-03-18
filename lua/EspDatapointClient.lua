@@ -30,6 +30,7 @@ local function getNumber(str, key)
 end
 
 local function identify()
+    print(devicekey)
     local identifystr = '{"path": "/v1/device/identify/", "method": "POST", "meta": {"Authorization": "token '..devicekey..'"}}\n'
     if isConnected == true then
         conn:send(identifystr)
@@ -67,15 +68,16 @@ local function keepAlive()
     if isConnected == true then
         conn:send(pingstr)
     else
-        connectServer()
+        connect()
     end
 end
 ----
-function M.init(devicekey)
-    if devicekey == nil or devicekey == '' then
+function M.init(key)
+    if key == nil or key == '' then
         assert(false, 'devicekey must be valid')
     end
-    devicekey = devicekey
+    devicekey = key
+    print(devicekey)
 end
 
 function M.run()
@@ -114,8 +116,8 @@ function M.datapoint(datastreamName, datapoint)
 end
 
 ----
-function M.setKeepAliveTime(keepAliveTime)
-    keepAliveTime = keepAliveTime
+function M.setKeepAliveTime(t)
+    keepAliveTime = t
 end
 
 
