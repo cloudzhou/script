@@ -55,6 +55,9 @@ local function route(response)
     if rpc then
         action = getStr(line, 'action')
         func = rpcMapFunc[action]
+        if func == nil then
+            func = rpcMapFunc['*']
+        end
         if func ~= nil then
             local result = func(action, {})
             if result and nonce then
