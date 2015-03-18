@@ -47,6 +47,9 @@ local function route(response)
     local line = string.sub(buffer, 1, i-1)
     buffer = string.sub(buffer, i+1, -1)
     local path = getStr(response, 'path')
+    if path == nil then
+        return
+    end
     local nonce = getNumber(response, 'nonce')
     local datastreamName = string.gmatch(path, '/v1/datastreams/([a-z-_.]+)/datapoint/?')()
     if datastreamName then
