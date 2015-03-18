@@ -53,7 +53,7 @@ local function route(response)
     local nonce = getNumber(response, 'nonce')
     local datastreamName = string.gmatch(path, '/v1/datastreams/([a-z-_.]+)/datapoint/?')()
     if datastreamName then
-        func = datapointMapFunc(datastreamName)
+        func = datapointMapFunc[datastreamName]
         if func ~= nil then
             local datapoint = {}
             datapoint['x'] = getNumber(response, 'x')
