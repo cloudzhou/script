@@ -8,11 +8,10 @@ local server = '115.29.202.58' -- iot.espressif.cn
 local port = 8000
 
 local rpcMapFunc = {}
-local datapointMapFunc = {}
 
 local keepAliveTime = 60000
 local isConnected = false
-local buffer = nil
+local buffer = ''
 
 local function getStr(str, key)
     for k in string.gmatch(str, '.*"'..key..'" *: *"([^"]+)".*') do
@@ -47,33 +46,19 @@ local function route(response)
     end
     local line = string.sub(buffer, 1, i-1)
     buffer = string.sub(buffer, i+1, -1)
-    local path = getStr(response, 'path')
-    local nonce = getNumber(response, 'nonce')
+    local path = getStr(line, 'path')
+    if path == nil then
+        return
+    end
+    local nonce = getNumber(line, 'nonce')
     local rpc = string.gmatch(path, '/v1/device/rpc/?')()
     if rpc then
-        action = getStr(response, 'action')
+        action = getStr(line, 'action')
         func = rpcMapFunc[action]
         if func ~= nil then
             local result = func(action, {})
             if result and nonce then
-                conn:send('{"status": 200, "nonce": '..nonce..'}\n')
-            end
-        end
-        return true
-    end
-    local datastreamName = string.gmatch(path, '/v1/datastreams/([a-z-_.]+)/datapoint/?')()
-    if datastreamName then
-        func = datapointMapFunc(datastreamName)
-        if func ~= nil then
-            local datapoint = {}
-            datapoint['x'] = getNumber(response, 'x')
-            datapoint['y'] = getNumber(response, 'y')
-            datapoint['z'] = getNumber(response, 'z')
-            datapoint['k'] = getNumber(response, 'k')
-            datapoint['l'] = getNumber(response, 'l')
-            local result = func(datastreamName, datapoint)
-            if result and nonce then
-                conn:send('{"status": 200, "nonce": '..nonce..'}\n')
+                conn:send('{"status": 200, "deliver_to_device": true, "nonce": '..nonce..'}\n')
             end
         end
         return true
@@ -86,12 +71,10 @@ end
 local function connect()
     conn = net.createConnection(net.TCP, false)
     conn:on('connection', function(sck, response)
-        print('connected at '..tmr.now())
         isConnected = true
         identify()
     end)
     conn:on('disconnection', function(sck, response)
-        print('disconnect at '..tmr.now())
         isConnected = false
         connect()
     end)
@@ -99,9 +82,7 @@ local function connect()
         route(response)
     end)
     conn:on('sent', function(sck, response)
-        print('sent at '..tmr.now())
     end)
-    print('connecting at '..tmr.now())
     conn:connect(port, server)
 end
 
@@ -110,15 +91,15 @@ local function keepAlive()
     if isConnected == true then
         conn:send(pingstr)
     else
-        connectServer()
+        connect()
     end
 end
 ----
-function M.init(devicekey)
-    if devicekey == nil or devicekey == '' then
-        assert(false, 'devicekey must be valid')
+function M.init(key)
+    if key == nil or key == '' then
+        assert(false, 'need key')
     end
-    devicekey = devicekey
+    devicekey = key
 end
 
 function M.run()
@@ -129,16 +110,7 @@ function M.run()
 end
 
 ----
-function M.onDatapoint(datastreamName, datapointFunc)
-    datapointMapFunc[datastreamName] = datapointFunc
-end
-
 function M.onRpc(action, rpcFunc)
     rpcMapFunc[action] = rpcFunc
-end
-
-----
-function M.setKeepAliveTime(keepAliveTime)
-    keepAliveTime = keepAliveTime
 end
 
