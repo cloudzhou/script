@@ -32,26 +32,11 @@ local function getNumber(str, key)
     return nil
 end
 
-local function connect()
-    conn = net.createConnection(net.TCP, false)
-    conn:on('connection', function(sck, response)
-        print('connected at '..tmr.now())
-        isConnected = true
-        identify()
-    end)
-    conn:on('disconnection', function(sck, response)
-        print('disconnect at '..tmr.now())
-        isConnected = false
-        connect()
-    end)
-    conn:on('receive', function(sck, response)
-        route(response)
-    end)
-    conn:on('sent', function(sck, response)
-        print('sent at '..tmr.now())
-    end)
-    print('connecting at '..tmr.now())
-    conn:connect(port, server)
+local function identify()
+    local identifystr = '{"path": "/v1/device/identify/", "method": "POST", "meta": {"Authorization": "token '..devicekey..'"}}\n'
+    if isConnected == true then
+        conn:send(identifystr)
+    end
 end
 
 local function route(response)
@@ -98,11 +83,26 @@ local function route(response)
     return false
 end
 
-local function identify()
-    local identifystr = '{"path": "/v1/device/identify/", "method": "POST", "meta": {"Authorization": "token '..devicekey..'"}}\n'
-    if isConnected == true then
-        conn:send(identifystr)
-    end
+local function connect()
+    conn = net.createConnection(net.TCP, false)
+    conn:on('connection', function(sck, response)
+        print('connected at '..tmr.now())
+        isConnected = true
+        identify()
+    end)
+    conn:on('disconnection', function(sck, response)
+        print('disconnect at '..tmr.now())
+        isConnected = false
+        connect()
+    end)
+    conn:on('receive', function(sck, response)
+        route(response)
+    end)
+    conn:on('sent', function(sck, response)
+        print('sent at '..tmr.now())
+    end)
+    print('connecting at '..tmr.now())
+    conn:connect(port, server)
 end
 
 local function keepAlive()

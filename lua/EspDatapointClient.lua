@@ -29,6 +29,17 @@ local function getNumber(str, key)
     return nil
 end
 
+local function identify()
+    local identifystr = '{"path": "/v1/device/identify/", "method": "POST", "meta": {"Authorization": "token '..devicekey..'"}}\n'
+    if isConnected == true then
+        conn:send(identifystr)
+    end
+end
+
+local function route(response)
+    print(response)
+end
+
 local function connect()
     conn = net.createConnection(net.TCP, false)
     conn:on('connection', function(sck, response)
@@ -49,16 +60,6 @@ local function connect()
     end)
     print('connecting at '..tmr.now())
     conn:connect(port, server)
-end
-
-local function route()
-end
-
-local function identify()
-    local identifystr = '{"path": "/v1/device/identify/", "method": "POST", "meta": {"Authorization": "token '..devicekey..'"}}\n'
-    if isConnected == true then
-        conn:send(identifystr)
-    end
 end
 
 local function keepAlive()
