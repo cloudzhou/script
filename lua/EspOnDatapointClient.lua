@@ -86,12 +86,10 @@ end
 local function connect()
     conn = net.createConnection(net.TCP, false)
     conn:on('connection', function(sck, response)
-        print('connected at '..tmr.now())
         isConnected = true
         identify()
     end)
     conn:on('disconnection', function(sck, response)
-        print('disconnect at '..tmr.now())
         isConnected = false
         connect()
     end)
@@ -110,15 +108,15 @@ local function keepAlive()
     if isConnected == true then
         conn:send(pingstr)
     else
-        connectServer()
+        connect()
     end
 end
 ----
-function M.init(devicekey)
-    if devicekey == nil or devicekey == '' then
-        assert(false, 'devicekey must be valid')
+function M.init(key)
+    if key == nil or key == '' then
+        assert(false, 'need key')
     end
-    devicekey = devicekey
+    devicekey = key
 end
 
 function M.run()
@@ -135,10 +133,5 @@ end
 
 function M.onRpc(action, rpcFunc)
     rpcMapFunc[action] = rpcFunc
-end
-
-----
-function M.setKeepAliveTime(keepAliveTime)
-    keepAliveTime = keepAliveTime
 end
 
