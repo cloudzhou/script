@@ -143,12 +143,21 @@ local function route(response)
     return false
 end
 
+local function identify()
+    local identifystr = '{"path": "/v1/device/identify/", "method": "POST", "meta": {"Authorization": "token '..devicekey..'"}}\n'
+    if isConnected == true then
+        conn:send(identifystr)
+    else
+        connectServer()
+    end
+end
+
 local function keepAlive()
     local pingstr = '{"path": "/v1/ping/", "method": "GET", "meta": {"Authorization": "token '..devicekey..'"}}\n'
     if isConnected == true then
         conn:send(pingstr)
     else
-        connectServer()         
+        connectServer()
     end
 end
 ----
@@ -210,5 +219,4 @@ end
 function M.setIsDebug(isDebug)
     isDebug = isDebug
 end
-
 
