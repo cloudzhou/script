@@ -62,11 +62,8 @@ local function route(response)
             datapoint['k'] = getNumber(line, 'k')
             datapoint['l'] = getNumber(line, 'l')
             local result = func(datastreamName, datapoint)
-            print(line)
-            print(result)
-            print(nonce)
             if result and nonce then
-                conn:send('{"status": 200, "nonce": '..nonce..'}\n')
+                conn:send('{"status": 200, "deliver_to_device": true, "nonce": '..nonce..'}\n')
             end
         end
         return true
