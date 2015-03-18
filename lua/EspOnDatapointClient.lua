@@ -12,7 +12,7 @@ local datapointMapFunc = {}
 
 local keepAliveTime = 60000
 local isConnected = false
-local buffer = nil
+local buffer = ''
 
 local function getStr(str, key)
     for k in string.gmatch(str, '.*"'..key..'" *: *"([^"]+)".*') do
