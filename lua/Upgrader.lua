@@ -6,7 +6,7 @@
 
 --[[
 require('Upgrader')
-Upgrader.update('EspClient.lua', 'http://115.29.202.58/static/lua/EspClient.lua')
+Upgrader.update('EspClient.lua', 'http://115.29.202.58/static/script/EspClient.lua')
 Upgrader.updateEspClient()
 ]]--
 
