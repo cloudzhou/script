@@ -55,7 +55,7 @@ local function route(response)
     if datastreamName then
         func = datapointMapFunc[datastreamName]
         if func == nil then
-            func = rpcMapFunc['*']
+            func = datapointMapFunc['*']
         end
         if func ~= nil then
             local datapoint = {}
