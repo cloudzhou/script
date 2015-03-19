@@ -20,7 +20,7 @@ local function getStr(str, key)
 end
 
 local function getNumber(str, key)
-    for k in string.gmatch(str, '.*"'..key..'" *: *(%d+).*') do
+    for k in string.gmatch(str, '.*"'..key..'" *: *([0-9.]+).*') do
         if k ~= nil then
             return k
         end
