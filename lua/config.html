@@ -1,0 +1,14 @@
+<html lang="zh-Hans">
+  <head><meta charset="utf-8"><title>nodemcu-softap</title></head>
+  <body>
+    <p>mode: {{mode}}</p>
+    <p>ip: {{ip}}</p>
+    <form method="post">
+      <div><label for="ssid">Ssid</label><div><input id="ssid" name="ssid"></div></div>
+      <div><label for="password">Password</label><div><input id="password" name="password"></div></div>
+      <input type="radio" name="mode" value="softap"/> softap
+      <input type="radio" name="mode" value="station" checked/> station
+      <br><button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
