@@ -13,7 +13,6 @@ end
 local function urlDecode(str)
   str = string.gsub(str, '+', ' ')
   str = string.gsub(str, '%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
-  str = string.gsub(str, '\r\n', '\n')
   return str
 end
 
@@ -76,12 +75,26 @@ local function getConnPair(conn)
     return nil, nil
 end
 
-local function receive(conn, data)
+local function disconnection(conn, data)
     key, value = getConnPair(conn)
-    if key == nil or value == nil then
-        conn:send(response(500, 'Too Many Connections'))
-        conn:close()
+    if key == nil then
         return
+    end
+    connections[key] = nil
+end
+
+local function receive(conn, data)
+    local key, value = getConnPair(conn)
+    if key == nil or value == nil then
+        key, value = getConnPair(nil)
+        if key == nil then
+            conn:send(response(500, 'Too Many Connections'))
+            conn:close()
+            return
+        end
+        value = {c=conn, t=tmr.now(), p=nil, l=0, m=nil, h='', b=nil} -- path, length, method, header, body
+        connections[key] = value
+        tmr.alarm(0, 5000, 0, disconnection(conn, ''))
     end
     value.t = tmr.now()
     if value.b ~= nil then
@@ -126,6 +139,7 @@ local function receive(conn, data)
             conn:send(response(404, '404 Not Found'))
         end
         func(conn, value.p, value.m, value.b)
+        disconnection(conn, '')
     end
 end
 
