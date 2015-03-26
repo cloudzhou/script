@@ -3,17 +3,10 @@ local M = {}
 _G[moduleName] = M
 
 local handlers = {}
-local connections = {}
 
 local function response(status, body)
     local length = string.len(body)
     return 'HTTP/1.0 '..status..' OK\r\nServer: esphttpd/0.9\r\nContent-Type: text/html\r\nContent-Length: '..length..'\r\nConnection: close\r\n\r\n'..body
-end
-
-local function urlDecode(str)
-  str = string.gsub(str, '+', ' ')
-  str = string.gsub(str, '%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
-  return str
 end
 
 local function setmode(mode, ssid, pwd)
@@ -30,7 +23,6 @@ end
 
 local function config(conn, path, method, data)
     if method == 'POST' then
-        data = urlDecode(data)
         ssid = string.gmatch(data, 'ssid=([^&]+)')()
         password = string.gmatch(data, 'password=([^&]+)')()
         mode = string.gmatch(data, 'mode=([^&]+)')()
@@ -59,88 +51,29 @@ local function config(conn, path, method, data)
     conn:send(response(200, body))
 end
 
-local function getConnPair(conn)
-    local i = 0
-    while i < 10 do
-        local key = 'k'..i
-        local value = connections[key]
-        if conn == nil and value == nil then
-            return key, value
-        end
-        if conn ~= nil and value ~= nil and value.c == conn then
-            return key, value
-        end
-        i = i + 1
-    end
-    return nil, nil
-end
-
-local function disconnection(conn, data)
-    key, value = getConnPair(conn)
-    if key == nil then
-        return
-    end
-    connections[key] = nil
-end
-
 local function receive(conn, data)
-    local key, value = getConnPair(conn)
-    if key == nil or value == nil then
-        key, value = getConnPair(nil)
-        if key == nil then
-            conn:send(response(500, 'Too Many Connections'))
-            conn:close()
-            return
-        end
-        value = {c=conn, t=tmr.now(), p=nil, l=0, m=nil, h='', b=nil} -- path, length, method, header, body
-        connections[key] = value
-        tmr.alarm(0, 5000, 0, disconnection(conn, ''))
+    local i, j = string.find(data, '\r\n\r\n')
+    if i == nil then
+        return false
     end
-    value.t = tmr.now()
-    if value.b ~= nil then
-        value.b = value.b .. data
-        if string.len(value.b) > 256 then
-            conn:send(response(400, 'Too Looong'))
-            return
-        end
-    else
-        value.h = value.h .. data
-        if string.len(value.h) > 256 then
-            conn:send(response(400, 'Too Looong'))
-            return
-        end
-        local i, j = string.find(value.h, '\r\n\r\n')
-        if i == nil then
-            return false
-        end
-        value.b = string.sub(value.h, i+4+1, -1)
-        value.h = '\r\n' .. string.sub(value.h, 1, i-1)
-        value.m, value.p = 'GET', string.gmatch(value.h, '\r\nGET ([0-9a-zA-Z.-_/]+) HTTP/1.+')()
-        if value.p == nil then
-            value.m, value.p = 'POST', string.gmatch(value.h, '\r\nPOST ([0-9a-zA-Z.-_/]+) HTTP/1.+')()
-        end
-        if value.p == nil then
-            return
-        end
-        if value.m == 'POST' then
-            value.l = string.gmatch(value.h, '\r\nContent-Length: ([0-9]+)')()
-            if value.l == nil then
-                return
-            end
-            value.l = tonumber(value.l)
-        end
+    local header = string.sub(data, 1, i-1)
+    local body = string.sub(data, i+4+1, -1)
+    local data = nil
+    local method, path = 'GET', string.gmatch(header, 'GET ([0-9a-zA-Z.-_/]+) HTTP/1.+')()
+    if path == nil then
+        method, path = 'POST', string.gmatch(header, 'POST ([0-9a-zA-Z.-_/]+) HTTP/1.+')()
     end
-    if value.m == nil then
+    if path == nil then
         return
     end
-    if (value.m == 'GET') or (value.m == 'POST' and value.b ~= nil and string.len(value.b) == value.l) then
-        func = handlers[value.p]
-        if func == nil then
-            conn:send(response(404, '404 Not Found'))
-        end
-        func(conn, value.p, value.m, value.b)
-        disconnection(conn, '')
+    func = handlers[path]
+    if func == nil then
+        conn:send(response(404, '404 Not Found'))
+        conn:close()
+        return
     end
+    func(conn, path, method, body)
+    conn:close()
 end
 
 local function route(conn)
