@@ -43,7 +43,7 @@ local function config(conn, path, method, data)
     local ip = wifi.sta.getip()
     if mode == 1 then
         modestr = 'station'
-    else if mode == 2 then
+    elseif mode == 2 then
         modestr = 'softap'
     end
     file.open('config.html', 'r')
@@ -63,12 +63,12 @@ end
 local function getConnPair(conn)
     local i = 0
     while i < 10 do
-        local key = 'k'...i
+        local key = 'k'..i
         local value = connections[key]
         if conn == nil and value == nil then
             return key, value
         end
-        if conn != nil and value != nil and value.c == conn then
+        if conn ~= nil and value ~= nil and value.c == conn then
             return key, value
         end
         i = i + 1
@@ -95,7 +95,7 @@ local function receive(conn, data)
         return
     end
     value.t = tmr.now()
-    if value.b != nil then
+    if value.b ~= nil then
         value.b = value.b .. data
         if string.len(value.b) > 256 then
             conn:send(response(400, 'Too Looong'))
@@ -131,7 +131,7 @@ local function receive(conn, data)
     if value.m == nil then
         return
     end
-    if (value.m == 'GET') or (value.m == 'POST' and value.b != nil and string.len(value.b) == value.l) then
+    if (value.m == 'GET') or (value.m == 'POST' and value.b ~= nil and string.len(value.b) == value.l) then
         func = handlers[value.p]
         if func == nil then
             conn:send(response(404, '404 Not Found'))
@@ -145,6 +145,7 @@ local function disconnection(conn, data)
     key, value = getConnPair(conn)
     if key == nil then
         return
+    end
     connections[key] = nil
 end
 
@@ -152,7 +153,7 @@ local function connCheck()
     local expired = tmr.now() - 10000
     local i = 0
     while i < 10 do
-        local key = 'k'...i
+        local key = 'k'..i
         local value = connections[key]
         if value and value.t < expired then
             disconnection(value.c, '')
