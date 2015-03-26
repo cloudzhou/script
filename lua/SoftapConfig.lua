@@ -11,7 +11,7 @@ local function response(status, body)
 end
 
 local function urlDecode(str)
-  local str = string.gsub(str, '+', ' ')
+  str = string.gsub(str, '+', ' ')
   str = string.gsub(str, '%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
   str = string.gsub(str, '\r\n', '\n')
   return str
@@ -97,8 +97,16 @@ local function receive(conn, data)
     value.t = tmr.now()
     if value.b != nil then
         value.b = value.b .. data
+        if string.len(value.b) > 256 then
+            conn:send(response(400, 'Too Looong'))
+            disconnection(conn, data)
+        end
     else
         value.h = value.h .. data
+        if string.len(value.h) > 256 then
+            conn:send(response(400, 'Too Looong'))
+            disconnection(conn, data)
+        end
         local i, j = string.find(value.h, '\r\n\r\n')
         if i == nil then
             return false
@@ -114,12 +122,13 @@ local function receive(conn, data)
         end
         if value.m == 'POST' then
             value.l = string.gmatch(value.h, '\r\nContent-Length: ([0-9]+)')()
-            if value.l != nil then
-                value.l = tonumber(value.l)
+            if value.l == nil then
+                disconnection(conn, '')
             end
+            value.l = tonumber(value.l)
         end
     end
-    if value.m == '' then
+    if value.m == nil then
         return
     end
     if (value.m == 'GET') or (value.m == 'POST' and value.b != nil and string.len(value.b) == value.l) then
@@ -128,6 +137,7 @@ local function receive(conn, data)
             conn:send(response(404, '404 Not Found'))
         end
         func(conn, value.p, value.m, value.b)
+        disconnection(conn, data)
     end
 end
 
