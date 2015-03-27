@@ -42,12 +42,12 @@ local function hello(conn, path, method, data)
 end
 
 local function calculator(conn, path, method, data)
-    result = '<h1>result: <strong>1 + 1 = 2</strong></h1>'
+    local result = '<h1>result: <strong>1 + 1 = 2</strong></h1>'
     if method == 'POST' then
-        num1 = tonumber(string.gmatch(data, 'num1=([0-9]+)')())
-        sign = urlDecode(string.gmatch(data, 'sign=([+-*/]+)')())
-        num2 = tonumber(string.gmatch(data, 'num2=([0-9]+)')())
-        resultNum = 'NaN'
+        local num1 = tonumber(string.gmatch(data, 'num1=([0-9]+)')())
+        local sign = urlDecode(string.gmatch(data, 'sign=([^&]+)')())
+        local num2 = tonumber(string.gmatch(data, 'num2=([0-9]+)')())
+        local resultNum = 'NaN'
         if sign == '+' then
             resultNum = num1 + num2
         end
@@ -62,7 +62,7 @@ local function calculator(conn, path, method, data)
         end
         result = '<h1>result: <strong>'..num1..' '..sign..' '..num2..' = '..resultNum..'</strong></h1>'
     end
-    body = render('calculator.html', {result=result})
+    local body = render('calculator.html', {result=result})
     conn:send(response(200, body))
 end
 
@@ -84,13 +84,9 @@ local function receive(conn, data)
     func = handlers[path]
     if func == nil then
         conn:send(response(404, '404 Not Found'))
-        conn:close()
-        conn, path, method, body = nil, nil, nil, nil
         return
     end
     func(conn, path, method, body)
-    conn:close()
-    conn, path, method, body = nil, nil, nil, nil
 end
 
 local function route(conn)
