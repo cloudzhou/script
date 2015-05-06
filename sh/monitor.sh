@@ -1,6 +1,7 @@
 #!/bin/bash
 
 usage=`top -b -n 1|head -n 3|grep ^Cpu|awk -F "%| " '{print $3}'`
+echo $usage
 usage=`printf '%.0f' $usage`
 
 memory_used=`free -m|grep ^Mem|awk '{print $3}'`
