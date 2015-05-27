@@ -128,8 +128,8 @@ class PostmanHandler(BaseRequestHandler):
                     r = self.jsonHandler.handle(self, jsonobj)
                     if not r:
                         break
-                    if 'nonce' in jsonstr:
-                        r['nonce'] = jsonstr['nonce']
+                    if 'nonce' in jsonobj:
+                        r['nonce'] = jsonobj['nonce']
                     if 'status' not in r:
                         r['status'] = 200
                     self.request.sendall(json.dumps(r) + '\n')
