@@ -3,6 +3,7 @@ import json
 import random
 import socket
 import threading
+import traceback
 from urlparse import urlparse, parse_qs
 from datetime import datetime
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -28,11 +29,13 @@ def deliver_to_device(device_id, jsonobj):
         return True
     except Exception, e:
         print e
+        print traceback.format_exc()
     return False
 
 class JsonHandler():
 
     def handle(self, postmanHandler, jsonobj):
+        print 'handle postman: %s' % json.dumps(jsonobj)
         if 'path' not in jsonobj and 'nonce' in jsonobj:
             nonce = jsonobj['nonce']
             if nonce in DELIVER:
@@ -97,6 +100,7 @@ class JsonHandler():
             postmanHandler.finish()
         except Exception, e:
             print e
+            print traceback.format_exc()
 
 class PostmanHandler(BaseRequestHandler):
 
@@ -131,6 +135,7 @@ class PostmanHandler(BaseRequestHandler):
                     self.request.sendall(json.dumps(r) + '\n')
         except Exception, e:
             print e
+            print traceback.format_exc()
 
 class IotHttpHandler(BaseHTTPRequestHandler):
 
@@ -186,6 +191,7 @@ class IotHttpHandler(BaseHTTPRequestHandler):
                     return
                 except Exception, e:
                     print e
+                    print traceback.format_exc()
                 finally:
                     del DELIVER[nonce]
 
