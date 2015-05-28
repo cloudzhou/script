@@ -1,4 +1,5 @@
 import re
+import os
 import json
 import random
 import socket
@@ -9,11 +10,14 @@ from datetime import datetime
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from SocketServer import BaseRequestHandler, ThreadingTCPServer
 
+DIRNAME = os.path.dirname(os.path.abspath(__file__))
+
 GATE = {}
 
 DELIVER = {}
 
-BINS = {'user1.bin': '/home/cloudzhou/Desktop/user1.bin', 'user2.bin': '/home/cloudzhou/Desktop/user2.bin'}
+BINS = {'user1.bin': os.path.join(DIRNAME, 'user1.bin'), 'user2.bin': os.path.join(DIRNAME, 'user2.bin')}
+HTML = os.path.join(DIRNAME, 'local_postman_server.html')
 
 DEVICES = [
     ['55e83b2d26f2266ffe4bc989f0a01fb55dbe52ce', '96c73f149ea9829065029e0df1918ed8761cd47e', {'productbatch_id': None, 'bssid': 'b18a0', 'ptype': 23701, 'activate_status': 1, 'serial': '3c1df254', 'id': 6, 'description': '839cc', 'last_active': '2015-05-19 20:13:03', 'rom_version': None, 'last_pull': '2014-06-13 17:06:16', 'last_push': '2014-06-13 17:06:16', 'location': '', 'metadata': 'cf00e', 'status': 1, 'updated': '2015-05-19 20:13:03', 'latest_rom_version': 'v1.1', 'activated_at': '2015-05-19 15:24:49', 'visibly': 1, 'is_private': 1, 'product_id': 3, 'name': '80c40', 'created': '2014-05-19 15:04:22', 'is_frozen': 0, 'key_id': 1018}],
@@ -151,7 +155,7 @@ class IotHttpHandler(BaseHTTPRequestHandler):
             get[x] = y[0]
         body = {}
         content_type = self.headers.getheader('Content-type')
-        if content_type == 'application/x-www-form-urlencoded':
+        if content_type and content_type.startswith('application/x-www-form-urlencoded'):
             length = int(self.headers.getheader('content-length'))
             body = json.loads(self.rfile.read(length))
         token = ''
@@ -166,7 +170,10 @@ class IotHttpHandler(BaseHTTPRequestHandler):
 
     def do(self):
         path, nonce, token, device, jsonobj = self.request_meta()
-        if re.match('^/v1/device/rom/?$', path):
+        if re.match('^/?$', path):
+            self.send_status_header('text/html')
+            self.write_data(open(HTML, 'r').read())
+        elif re.match('^/v1/device/rom/?$', path):
             filename = jsonobj['get']['filename']
             if filename not in BINS:
                 self.send_status_header('application/json')
