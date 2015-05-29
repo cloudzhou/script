@@ -79,6 +79,7 @@ class JsonHandler():
                     if postmanHandler != GATE[device_id]:
                         self.close_quiet(GATE[device_id])
                 GATE[device_id] = postmanHandler
+                postmanHandler.device = device
                 return {'device': device}
         # device quit
         elif re.match('^/v1/device/quit/?$', path):
@@ -152,6 +153,11 @@ class PostmanHandler(BaseRequestHandler):
         except Exception, e:
             print e
             print traceback.format_exc()
+        finally:
+            device = self.device
+            if device and device['id'] in GATE:
+                if self == GATE[device['id']]:
+                    del GATE[device['id']]
 
 class IotHttpHandler(BaseHTTPRequestHandler):
 
