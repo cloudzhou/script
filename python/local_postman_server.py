@@ -111,8 +111,8 @@ class PostmanHandler(BaseRequestHandler):
     def handle(self):
         self.jsonHandler = JsonHandler()
         self._buffer = ''
-        try:
-            while True:
+        while True:
+            try:
                 recv_buffer = self.request.recv(4096)
                 if not recv_buffer:
                     break
@@ -137,9 +137,9 @@ class PostmanHandler(BaseRequestHandler):
                     if 'status' not in r:
                         r['status'] = 200
                     self.request.sendall(json.dumps(r) + '\n')
-        except Exception, e:
-            print e
-            print traceback.format_exc()
+            except Exception, e:
+                print e
+                print traceback.format_exc()
 
 class IotHttpHandler(BaseHTTPRequestHandler):
 
@@ -168,8 +168,9 @@ class IotHttpHandler(BaseHTTPRequestHandler):
         nonce = random.randint(0, 1<<20)
         return path, nonce, token, device, {'nonce': nonce, 'path': path, 'meta': meta, 'get': get, 'body': body}
 
-    def do(self):
+    def do(self, method):
         path, nonce, token, device, jsonobj = self.request_meta()
+        jsonobj['method'] = method
         if re.match('^/?$', path):
             self.send_status_header('text/html')
             self.write_data(open(HTML, 'r').read())
@@ -205,10 +206,10 @@ class IotHttpHandler(BaseHTTPRequestHandler):
         self.write_data('{"status": 404, "nonce": %s, "message": "deivce not found"}' % nonce)
 
     def do_GET(self):
-        self.do()
+        self.do('GET')
 
     def do_POST(self):
-        self.do()
+        self.do('POST')
 
     def send_status_header(self, content_type):
         self.send_response(200)
