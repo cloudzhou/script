@@ -1,6 +1,7 @@
 import re
 import os
 import json
+import time
 import random
 import socket
 import threading
@@ -62,7 +63,7 @@ class JsonHandler():
         if re.match('^/v1/ping/?$', path):
             now = datetime.now()
             nowstr = now.strftime('%Y-%m-%d %H:%M:%S')
-            epoch = int(now.strftime('%s'))
+            epoch = int(time.time())
             return {'datetime': nowstr, 'epoch': epoch, 'message': 'ping success'}
         # get device
         elif re.match('^/v1/device/?$', path):
@@ -108,11 +109,20 @@ class JsonHandler():
 
 class PostmanHandler(BaseRequestHandler):
 
+    def get_jsonobj(self, jsonstr):
+        try:
+            jsonobj = json.loads(jsonstr)
+            return jsonobj
+        except Exception, e:
+            print e
+            print traceback.format_exc()
+        return None
+
     def handle(self):
         self.jsonHandler = JsonHandler()
         self._buffer = ''
-        while True:
-            try:
+        try:
+            while True:
                 recv_buffer = self.request.recv(4096)
                 if not recv_buffer:
                     break
@@ -128,7 +138,9 @@ class PostmanHandler(BaseRequestHandler):
                 self._buffer = recv_buffer[r+1:]
                 jsonstrs = line.split('\n')
                 for jsonstr in jsonstrs:
-                    jsonobj = json.loads(jsonstr)
+                    jsonobj = self.get_jsonobj(jsonstr)
+                    if not jsonobj:
+                        continue
                     r = self.jsonHandler.handle(self, jsonobj)
                     if not r:
                         break
@@ -137,9 +149,9 @@ class PostmanHandler(BaseRequestHandler):
                     if 'status' not in r:
                         r['status'] = 200
                     self.request.sendall(json.dumps(r) + '\n')
-            except Exception, e:
-                print e
-                print traceback.format_exc()
+        except Exception, e:
+            print e
+            print traceback.format_exc()
 
 class IotHttpHandler(BaseHTTPRequestHandler):
 
