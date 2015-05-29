@@ -182,7 +182,7 @@ class IotHttpHandler(BaseHTTPRequestHandler):
                 return
             filepath = BINS[filename]
             self.send_status_header('application/octet-stream')
-            self.write_data(open(filepath, 'r').read())
+            self.write_data(open(filepath, 'rb').read())
             return
         self.send_status_header('application/json')
         if device and nonce:
