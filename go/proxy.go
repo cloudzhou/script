@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -26,16 +27,26 @@ var proxyUrl string
 var contextMap map[string]*Context = make(map[string]*Context)
 var mutex sync.Mutex
 
-func getContext(srcAddrHex string) *Context {
+func getContext(addrHex string) *Context {
 	mutex.Lock()
 	defer mutex.Unlock()
-	return contextMap[srcAddrHex]
+	return contextMap[addrHex]
 }
 
-func register(srcAddrHex string, c *Context) {
+func dumpContextMap() map[string][]string {
 	mutex.Lock()
 	defer mutex.Unlock()
-	contextMap[srcAddrHex] = c
+	m := make(map[string][]string)
+	for s, c := range contextMap {
+		m[s] = c.addrs()
+	}
+	return m
+}
+
+func register(addrHex string, c *Context) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	contextMap[addrHex] = c
 }
 
 func unregister(c *Context) {
@@ -99,9 +110,11 @@ func (p *Packet) unmarshalFromHttp(header http.Header, body io.ReadCloser) error
 		if err != nil {
 			return err
 		}
+		p.OtLen = len(p.OptionList)
 	}
 	defer body.Close()
 	p.Data, err = ioutil.ReadAll(body)
+	p.Len = 16 + p.OtLen + len(p.Data)
 	return err
 }
 
@@ -147,6 +160,8 @@ func putPacket(p *Packet) {
 	p.SrcAddr = nil
 	p.OptionList = nil
 	p.Data = nil
+	p.OtLen = 0
+	p.Len = 0
 	packetPool.Put(p)
 }
 
@@ -157,20 +172,20 @@ type Context struct {
 	sync.Mutex
 }
 
-func (c *Context) join(srcAddrHex string) bool {
+func (c *Context) join(addrHex string) bool {
 	c.Lock()
 	defer c.Unlock()
-	if _, ok := c.addrMap[srcAddrHex]; ok {
+	if _, ok := c.addrMap[addrHex]; ok {
 		return true
 	}
-	c.addrMap[srcAddrHex] = struct{}{}
+	c.addrMap[addrHex] = struct{}{}
 	return false
 }
 
-func (c *Context) leave(srcAddrHex string) {
+func (c *Context) leave(addrHex string) {
 	c.Lock()
 	defer c.Unlock()
-	delete(c.addrMap, srcAddrHex)
+	delete(c.addrMap, addrHex)
 }
 
 func (c *Context) addrs() []string {
@@ -186,7 +201,7 @@ func (c *Context) addrs() []string {
 }
 
 func (c *Context) read(packet *Packet) error {
-	c.conn.SetReadDeadline(time.Now().Add(3 * time.Minute))
+	c.conn.SetReadDeadline(time.Now().Add(10 * time.Minute))
 	buf := make([]byte, 4)
 	_, err := io.ReadFull(c.reader, buf)
 	if err != nil {
@@ -218,8 +233,8 @@ func (c *Context) read(packet *Packet) error {
 	if 16+packet.OtLen > packet.Len {
 		return errors.New("16 + packet.OtLen > packet.Len")
 	}
-	packet.OptionList = buf[18 : 18+packet.OtLen-2]
-	packet.Data = buf[18+packet.OtLen-2:]
+	packet.OptionList = buf[18 : 16+packet.OtLen]
+	packet.Data = buf[16+packet.OtLen:]
 	return nil
 }
 
@@ -243,9 +258,22 @@ type HttpHandler struct {
 
 func NewHttpHandler() *HttpHandler {
 	client := http.Client{
-		Timeout: time.Duration(3 * time.Second),
+		Timeout: time.Duration(5 * time.Second),
 	}
 	return &HttpHandler{client: client}
+}
+
+func (h *HttpHandler) json(w http.ResponseWriter, body []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	w.Write(body)
+}
+
+func (h *HttpHandler) query(w http.ResponseWriter, c *Context) {
+	addrs := c.addrs()
+	m := map[string][]string{"nodes": addrs}
+	body, _ := json.Marshal(m)
+	h.json(w, body)
 }
 
 func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -270,15 +298,15 @@ func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "context write error", 502)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		w.Write([]byte(`{"status": 200, "message": "deliver success"}`))
-	case "/nodes":
+		h.json(w, []byte(`{"status": 200, "message": "deliver success"}`))
+	case "/mesh":
 		node := values.Get("node")
 		root := values.Get("root")
 		action := values.Get("action")
-		if node == "" || root == "" || len(node) != 12 || len(root) != 12 {
-			http.Error(w, `node == "" || root == "" || len(node) != 12 || len(root) != 12`, 400)
+		if action == "dump" {
+			m := dumpContextMap()
+			body, _ := json.Marshal(m)
+			h.json(w, body)
 			return
 		}
 		c := getContext(root)
@@ -286,24 +314,17 @@ func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "root node not registered", 404)
 			return
 		}
-		query := func(w http.ResponseWriter, c *Context) {
-			addrs := c.addrs()
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(200)
-			body := fmt.Sprintf(`{"nodes": ["%s"]}`, strings.Join(addrs, `", "`))
-			w.Write([]byte(body))
-		}
 		switch action {
 		case "query":
-			query(w, c)
+			h.query(w, c)
 		case "join":
 			c.join(node)
-			query(w, c)
+			h.query(w, c)
 		case "leave":
 			c.leave(node)
-			query(w, c)
+			h.query(w, c)
 		default:
-			http.Error(w, "action: join/leave", 400)
+			http.Error(w, "action: dump/query/join/leave", 400)
 			return
 		}
 	default:
@@ -358,7 +379,7 @@ type ProxyHandler struct {
 
 func NewProxyHandler() *ProxyHandler {
 	client := http.Client{
-		Timeout: time.Duration(3 * time.Second),
+		Timeout: time.Duration(5 * time.Second),
 	}
 	return &ProxyHandler{client: client}
 }
@@ -369,8 +390,10 @@ func (p *ProxyHandler) proxy(req *Packet, resp *Packet) error {
 	httpReq.Header.Add("X-MESH-META", meshMeta)
 	meshAddr := fmt.Sprintf("%s/%s", hex.EncodeToString(req.DstAddr), hex.EncodeToString(req.SrcAddr))
 	httpReq.Header.Add("X-MESH-ADDR", meshAddr)
-	optionListHex := hex.EncodeToString(req.OptionList)
-	httpReq.Header.Add("X-MESH-OPTIONLIST", optionListHex)
+	if req.Option == 1 {
+		optionListHex := hex.EncodeToString(req.OptionList)
+		httpReq.Header.Add("X-MESH-OPTIONLIST", optionListHex)
+	}
 	httpReq.Header.Add("Content-Length", string(len(req.Data)))
 	httpReq.Header.Add("Content-Type", "application/octet-stream")
 	httpResp, err := p.client.Do(httpReq)
@@ -396,9 +419,9 @@ func (p *ProxyHandler) handle(conn net.Conn) error {
 			return err
 		}
 		log.Println("req packet: {", req.dump(), "}")
-		srcAddrHex := hex.EncodeToString(req.SrcAddr)
-		if !c.join(srcAddrHex) {
-			register(srcAddrHex, c)
+		addrHex := hex.EncodeToString(req.SrcAddr)
+		if !c.join(addrHex) {
+			register(addrHex, c)
 		}
 		err = p.proxy(req, resp)
 		if err != nil {
@@ -420,7 +443,6 @@ func setProxyUrl() {
 	}
 }
 
-// go run mesh/proxy.go --proxyUrl=http://localhost/v1/device/mesh/echo
 func main() {
 	setProxyUrl()
 	sc := make(chan os.Signal, 1)
