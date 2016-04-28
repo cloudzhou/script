@@ -1,1 +1,1 @@
-# all my script
+# all my scripts
