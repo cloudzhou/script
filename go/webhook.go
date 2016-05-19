@@ -51,7 +51,7 @@ func generateBin(ref string, commit string) {
 	url := "http://iot.espressif.cn/v1/products/1/roms/"
 	body := []byte(fmt.Sprintf(`{"productRoms":[{"version":"%s","life_cycle":"%s","recommended":1,"files":[{"path":"6f30accbc94a19224eb71f2e392ed32d.bin","name":"user1.bin"}, {"path":"6f30accbc94a19224eb71f2e392ed32d.bin","name":"user2.bin"}]}]}`, version, lifecycle))
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	req.Header.Set("Authorization", "token 3499cf4a9a173ba316c2f14e3811d5ad73374c8e")
+	req.Header.Set("Authorization", "token xxxxxxxxxxxxxxxxxxxxxxxxxx")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
