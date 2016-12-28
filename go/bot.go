@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	ApiUrl       = "https://gitlab.espressif.cn:6688/api/v3"
-	Token        = "espressif-gitlab-bot"
-	PrivateToken = "zStdT1TytGdNEzyTyaZT"
-	AuthorId     = 9
+	ApiUrl       = ""
+	Token        = ""
+	PrivateToken = ""
+	AuthorId     = 0
 )
 
 func main() {
