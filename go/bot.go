@@ -91,7 +91,7 @@ func (h *HttpHandler) doNote(w http.ResponseWriter, req *http.Request, body map[
 		mergeId := int(h.GetValue("merge_request.id", body).(float64))
 		authorId := int(h.GetValue("object_attributes.author_id", body).(float64))
 		note := h.GetValue("object_attributes.note", body).(string)
-		if authorId != AuthorId {
+		if authorId == 0 || authorId == AuthorId {
 			return
 		}
 		if !strings.Contains(note, "@bot ") {
