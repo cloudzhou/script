@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	apiUrl       = "https://gitlab.espressif.cn:6688/api/v3"
-	token        = "espressif-gitlab-bot"
-	privateToken = "zStdT1TytGdNEzyTyaZT"
+	ApiUrl       = "https://gitlab.espressif.cn:6688/api/v3"
+	Token        = "espressif-gitlab-bot"
+	PrivateToken = "zStdT1TytGdNEzyTyaZT"
+	AuthorId     = 9
 )
 
 func main() {
@@ -53,7 +54,7 @@ func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h *HttpHandler) doBot(w http.ResponseWriter, req *http.Request) {
-	if token != req.Header.Get("X-Gitlab-Token") {
+	if Token != req.Header.Get("X-Gitlab-Token") {
 		http.Error(w, "Require X-Gitlab-Token", 403)
 		return
 	}
@@ -88,8 +89,16 @@ func (h *HttpHandler) doNote(w http.ResponseWriter, req *http.Request, body map[
 	case "MergeRequest":
 		projectId := int(h.GetValue("merge_request.source_project_id", body).(float64))
 		mergeId := int(h.GetValue("merge_request.id", body).(float64))
-		uri := fmt.Sprintf("%s/projects/%d/merge_requests/%d/notes?private_token=%s", apiUrl, projectId, mergeId, privateToken)
-		h.Post(uri, "body", "Triggered unit tests run")
+		authorId := int(h.GetValue("object_attributes.author_id", body).(float64))
+		note := h.GetValue("object_attributes.note", body).(string)
+		if authorId != AuthorId {
+			return
+		}
+		if !strings.Contains(note, "@bot ") {
+			return
+		}
+		uri := fmt.Sprintf("%s/projects/%d/merge_requests/%d/notes?private_token=%s", ApiUrl, projectId, mergeId, PrivateToken)
+		h.Post(uri, "body", "Triggered unit tests run by: "+note)
 	default:
 		http.Error(w, "Bad object_attributes.noteable_type", 400)
 		return
