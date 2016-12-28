@@ -205,7 +205,6 @@ func (c *Context) read(packet *Packet) error {
 	buf := make([]byte, 4)
 	_, err := io.ReadFull(c.reader, buf)
 	if err != nil {
-		c.conn.Close()
 		return err
 	}
 	len := binary.LittleEndian.Uint16(buf[2:4])
