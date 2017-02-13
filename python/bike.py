@@ -45,7 +45,6 @@ def ack(s):
 
 if __name__ == '__main__':
     while True:
-        time.sleep(1)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setblocking(1)
         s.settimeout(600000)
@@ -53,4 +52,4 @@ if __name__ == '__main__':
 
         connect(s)
         ack(s)
-
+        time.sleep(1)
