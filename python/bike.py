@@ -15,13 +15,27 @@ def connect(s):
     s.sendall(b)
 
 def pub(s):
-    pass
+    b = bytearray()
+    b.extend([0x70, 0x15])
+    b.extend([0x71])
+    b.extend(b'313437935')
+    b.extend([0x72])
+    b.extend(b'1202510124')
+    b.extend([0x2b, 0x68])
+    try:
+        s.sendall(b)
+    except: 
+        return True
+    return False
 
 def ack(s):
     while True:
-        buf = s.recv(4096)
-        if buf is None:
-            return
+        try:
+            buf = s.recv(4096)
+        except: 
+            if pub(s):
+                return
+            continue
         cmd = buf[0]
         key = buf[2]
         value = buf[3]
@@ -47,7 +61,7 @@ if __name__ == '__main__':
     while True:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setblocking(1)
-        s.settimeout(600000)
+        s.settimeout(6)
         s.connect((HOST, PORT))
 
         connect(s)
