@@ -3,14 +3,13 @@
 import socket
 import time
 
-HOST = 'api.vklmotor.com'
+HOST = 'api.syxgo.com'
 PORT = 6000
-TOKEN = '0123456789abcde'
 
 def connect(s):
     b = bytearray()
     b.extend([0x43, 0x10, 0x01])
-    b.extend(b'0123456789abcde')
+    b.extend(b'863586036994022')
     b.extend([0x2b, 0x68])
     s.sendall(b)
 
@@ -18,9 +17,9 @@ def pub(s):
     b = bytearray()
     b.extend([0x70, 0x15])
     b.extend([0x71])
-    b.extend(b'313437935')
+    b.extend(b'312086160')
     b.extend([0x72])
-    b.extend(b'1202510124')
+    b.extend(b'1216285110')
     b.extend([0x2b, 0x68])
     try:
         s.sendall(b)
@@ -49,6 +48,8 @@ def ack(s):
                     print('beep')
             elif key == 0xEA: #ping
                     print('ping')
+            elif key == 0xEF: #ota
+                    print('ota')
         msgidlen = buf[5]
         msgid = buf[6:6+msgidlen]
         b = bytearray()
