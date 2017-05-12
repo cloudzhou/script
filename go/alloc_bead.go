@@ -26,12 +26,12 @@ func alloc(m int, n int, max int) int {
 	}
 	// 算出最小值
 	min := m / n
-	if m%n == 0 {
-		min = min - 1
+	if m%n != 0 {
+		min = min + 1
 	}
 	// 递归累加
 	count := 0
-	for i := max; i > min; i-- {
+	for i := max; i >= min; i-- {
 		count += alloc(m-i, n-1, i)
 	}
 	return count
