@@ -4,7 +4,7 @@ import socket
 import time
 
 HOST = 'api.syxgo.com'
-PORT = 6000
+PORT = 6001
 
 def connect(s):
     b = bytearray()
@@ -15,11 +15,13 @@ def connect(s):
 
 def pub(s):
     b = bytearray()
-    b.extend([0x70, 0x15])
+    b.extend([0x70, 0x19])
     b.extend([0x71])
     b.extend(b'312086160')
     b.extend([0x72])
     b.extend(b'1216285110')
+    b.extend([0x7f, 0x01])
+    b.extend([0x80, 0x01])
     b.extend([0x2b, 0x68])
     try:
         s.sendall(b)
@@ -32,8 +34,8 @@ def ack(s):
         try:
             buf = s.recv(4096)
         except: 
-            if pub(s):
-                return
+            #if pub(s):
+            #    return
             continue
         cmd = buf[0]
         key = buf[2]
@@ -46,10 +48,17 @@ def ack(s):
                     print('unlock')
             elif key == 0xE2: #beep
                     print('beep')
+                    print(value)
             elif key == 0xEA: #ping
                     print('ping')
             elif key == 0xEF: #ota
                     print('ota')
+            elif key == 0xF0: #idle_iv
+                    print('idle_iv')
+                    print(value)
+            elif key == 0xF1: #idle_iv
+                    print('busy_iv')
+                    print(value)
         msgidlen = buf[5]
         msgid = buf[6:6+msgidlen]
         b = bytearray()
@@ -67,4 +76,7 @@ if __name__ == '__main__':
 
         connect(s)
         ack(s)
-        time.sleep(1)
+        #time.sleep(1)
+        while True:
+            time.sleep(3)
+            pub(s)
