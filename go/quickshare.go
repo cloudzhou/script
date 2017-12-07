@@ -188,7 +188,7 @@ func client() {
 	}
 	// print randstr share key
 	randstr := strconv.FormatInt(int64(binary.BigEndian.Uint32(buf)), 36)
-	log.Println("share with url: ", "106.15.192.203:7070/" + randstr)
+	log.Println("share with url: ", "http://106.15.192.203:7070/" + randstr)
 	// normalize name
 	if filepath[0] != '/' {
 		dir, err := os.Getwd()
