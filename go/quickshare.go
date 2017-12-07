@@ -57,7 +57,7 @@ func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func RunHttp() {
 	httpHandler := NewHttpHandler()
 	s := &http.Server{
-		Addr:           ":8080",
+		Addr:           ":7070",
 		Handler:        httpHandler,
 		ReadTimeout:    5 * time.Second,
 		WriteTimeout:   5 * time.Second,
@@ -67,7 +67,7 @@ func RunHttp() {
 }
 
 func RunProxy() {
-	l, err := net.Listen("tcp", ":1234")
+	l, err := net.Listen("tcp", ":1024")
 	if err != nil {
 		log.Println(err)
 		panic(err)
@@ -117,7 +117,7 @@ func server() {
 
 func client() {
 	filepath := os.Args[2]
-	conn, err := net.Dial("tcp", "localhost:1234")
+	conn, err := net.Dial("tcp", "api.iotlabs.xyz:1024")
 	if err != nil {
 		panic(err)
 	}
@@ -130,7 +130,7 @@ func client() {
 	}
 	// print randstr share key
 	randstr := strconv.FormatInt(int64(binary.BigEndian.Uint32(buf)), 36)
-	log.Println("client", filepath, conn, randstr)
+	log.Println("share with url: ", "106.15.192.203:7070/" + randstr)
 	// normalize name
 	if filepath[0] != '/' {
 		dir, err := os.Getwd()

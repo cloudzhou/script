@@ -31,7 +31,7 @@ func main() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
-	airbnbCalendarQuery("1298200", 10, 2017, 1)
+	// airbnbCalendarQuery("1298200", 10, 2017, 1)
 
 	go runHttp()
 
@@ -40,7 +40,10 @@ func main() {
 }
 
 func airbnbCalendar(w http.ResponseWriter, r *http.Request) {
-	calendars := airbnbCalendarQuery("1298200", 10, 2017, 1)
+	listingId := queryString(r, "listing_id")
+	now := time.Now()
+	year, month := now.Year(), int(now.Month())
+	calendars := airbnbCalendarQuery(listingId, month, year, 5)
 	var buf bytes.Buffer
 	buf.WriteString(begin)
 	for _, calendar := range calendars {
@@ -79,7 +82,7 @@ func airbnbCalendarQuery(listingId string, month int, year int, count int) []*ca
 	log.Println(url)
 	// status, body, err := doHttpGet(url)
 	var err error
-	status, body, err := 200, jj, nil // doHttpGet(url)
+	status, body, err := doHttpGet(url)
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -115,10 +118,12 @@ func calendarUnavailable(body string) []*calendar {
 			return nil
 		}
 		days, ok := getValue(calendarMonth, "days").([]interface{})
-		if !ok {
+		if !ok || len(days) == 0 {
 			log.Println("can not found days")
 			return nil
 		}
+		// lastDay := days[len(days)-1].(map[string]interface{})
+		// TODO last day
 		for _, y := range days {
 			day, ok := y.(map[string]interface{})
 			if !ok {
@@ -129,17 +134,16 @@ func calendarUnavailable(body string) []*calendar {
 			if !ok1 || !ok2 {
 				log.Println("available and date not ok")
 			}
-			if !available {
-				if preAvailable {
-					dateFrom = date
-					preAvailable = false
-					nights = 1
-				} else {
-					nights += 1
-				}
-			}
-			dateTo = date
-			if available && !preAvailable {
+			if preAvailable && !available {
+				dateFrom = date
+				preAvailable = false
+				nights = 1
+			} else if preAvailable && available {
+				// nothing
+			} else if !preAvailable && !available {
+				nights++
+			} else if !preAvailable && available {
+				dateTo = date
 				preAvailable = true
 				calendars = append(calendars, &calendar{dateFrom: dateFrom, dateTo: dateTo, nights: nights, available: false})
 				log.Println(dateFrom, dateTo, nights)
@@ -148,19 +152,17 @@ func calendarUnavailable(body string) []*calendar {
 			log.Println(available, date)
 		}
 	}
-	d, err := time.Parse("2006-01-02", dateTo)
+	return calendars
+}
+
+func nextDay(day string) string {
+	d, err := time.Parse("2006-01-02", day)
 	if err != nil {
 		log.Println(err)
-		return nil
+		return day
 	}
 	d = d.Add(24 * time.Hour)
-	dateTo = d.Format("2006-01-02")
-
-	if nights > 0 {
-		calendars = append(calendars, &calendar{dateFrom: dateFrom, dateTo: dateTo, nights: nights, available: false})
-		log.Println(dateFrom, dateTo, nights)
-	}
-	return calendars
+	return d.Format("2006-01-02")
 }
 
 func doHttpGet(url string) (int, []byte, error) {
