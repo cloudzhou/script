@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/binary"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -21,9 +23,28 @@ import (
 type file struct {
 	conn net.Conn
 	name string
+	c    chan struct{}
 }
 
-var filemap map[uint32]*file
+func (f *file) signalSend() {
+	buf := make([]byte, 1)
+	f.conn.Write(buf)
+}
+
+func (f *file) notify() {
+	select {
+	case f.c <- struct{}{}:
+	default:
+	}
+}
+func (f *file) wait() {
+	select {
+	case <-f.c:
+	case <-time.After(time.Second * 60):
+	}
+}
+
+var filemap map[uint32]*file = make(map[uint32]*file)
 var mutex sync.Mutex
 
 type Handler interface {
@@ -44,14 +65,18 @@ func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
+	mutex.Lock()
 	file, ok := filemap[uint32(randint)]
+	mutex.Unlock()
 	if !ok {
 		w.Write([]byte("file not found"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%s", file.name))
+	file.signalSend()
 	io.Copy(w, file.conn)
+	file.notify()
 }
 
 func RunHttp() {
@@ -102,6 +127,39 @@ func NewProxyHandler() *ProxyHandler {
 }
 
 func (p *ProxyHandler) handle(conn net.Conn) error {
+	rint := uint32(rand.Int31())
+	buf := make([]byte, 4)
+	binary.BigEndian.PutUint32(buf, rint)
+	_, err := conn.Write(buf)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(buf)
+	_, err = conn.Read(buf)
+	if err != nil {
+		panic(err)
+	}
+	l := int(binary.BigEndian.Uint32(buf))
+	log.Println(l)
+	if l > 1024 {
+		return errors.New("name too large")
+	}
+	buf = make([]byte, l)
+	_, err = conn.Read(buf)
+	if err != nil {
+		panic(err)
+	}
+	name := string(buf)
+	log.Println(name)
+	f := &file{conn: conn, name: name, c: make(chan struct{})}
+	mutex.Lock()
+	filemap[rint] = f
+	mutex.Unlock()
+	f.wait()
+	mutex.Lock()
+	delete(filemap, rint)
+	mutex.Unlock()
+	conn.Close()
 	return nil
 }
 
@@ -149,7 +207,7 @@ func client() {
 	}
 	// wait send singal
 	buf = make([]byte, 1)
-	_, err = conn.Write(buf)
+	_, err = conn.Read(buf)
 	if err != nil {
 		panic(err)
 	}
@@ -176,4 +234,8 @@ func main() {
 		client()
 		return
 	}
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }
