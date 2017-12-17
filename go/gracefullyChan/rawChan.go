@@ -5,10 +5,11 @@ type rawChan struct {
 }
 
 func newRawChan() gracefullyChan {
-	return &rawChan{c: make(chan interface{})}
+	return &rawChan{}
 }
 
-func (r *rawChan) start(f func(i interface{})) error {
+func (r *rawChan) start(f func(i interface{}), chanlen int) error {
+	r.c = make(chan interface{}, chanlen)
 	go func() {
 		for i := range r.c {
 			f(i)

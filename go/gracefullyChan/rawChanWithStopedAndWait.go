@@ -12,13 +12,14 @@ type rawChanWithStopedAndWait struct {
 }
 
 func newRawChanWithStopedAndWait() gracefullyChan {
-	r := &rawChanWithStopedAndWait{c: make(chan interface{})}
+	r := &rawChanWithStopedAndWait{}
 	r.wg = sync.WaitGroup{}
 	r.wg.Add(1)
 	return r
 }
 
-func (r *rawChanWithStopedAndWait) start(f func(i interface{})) error {
+func (r *rawChanWithStopedAndWait) start(f func(i interface{}), chanlen int) error {
+	r.c = make(chan interface{}, chanlen)
 	go func() {
 		for i := range r.c {
 			f(i)

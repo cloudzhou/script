@@ -6,20 +6,22 @@ import (
 )
 
 type rawChanWithStopedAndQuite struct {
-	stoped int32
-	c      chan interface{}
-	quite  interface{}
-	wg     *sync.WaitGroup
+	counter int32
+	stoped  int32
+	c       chan interface{}
+	quite   interface{}
+	wg      *sync.WaitGroup
 }
 
 func newRawChanWithStopedAndQuite() gracefullyChan {
 	var wg sync.WaitGroup
 	wg.Add(1)
-	r := &rawChanWithStopedAndQuite{c: make(chan interface{}, 10), quite: &struct{}{}, wg: &wg}
+	r := &rawChanWithStopedAndQuite{quite: &struct{}{}, wg: &wg}
 	return r
 }
 
-func (r *rawChanWithStopedAndQuite) start(f func(i interface{})) error {
+func (r *rawChanWithStopedAndQuite) start(f func(i interface{}), chanlen int) error {
+	r.c = make(chan interface{}, chanlen)
 	go func() {
 		for i := range r.c {
 			if i == r.quite {
@@ -32,9 +34,11 @@ func (r *rawChanWithStopedAndQuite) start(f func(i interface{})) error {
 			case i := <-r.c:
 				f(i)
 			default:
-				close(r.c)
-				r.wg.Done()
-				return
+				if atomic.LoadInt32(&r.counter) == 0 {
+					close(r.c)
+					r.wg.Done()
+					return
+				}
 			}
 		}
 	}()
@@ -42,6 +46,8 @@ func (r *rawChanWithStopedAndQuite) start(f func(i interface{})) error {
 }
 
 func (r *rawChanWithStopedAndQuite) push(i interface{}) bool {
+	atomic.AddInt32(&r.counter, 1)
+	defer atomic.AddInt32(&r.counter, -1)
 	if atomic.LoadInt32(&r.stoped) == 1 {
 		return false
 	}

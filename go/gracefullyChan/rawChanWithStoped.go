@@ -10,10 +10,11 @@ type rawChanWithStoped struct {
 }
 
 func newRawChanWithStoped() gracefullyChan {
-	return &rawChanWithStoped{c: make(chan interface{})}
+	return &rawChanWithStoped{}
 
 }
-func (r *rawChanWithStoped) start(f func(i interface{})) error {
+func (r *rawChanWithStoped) start(f func(i interface{}), chanlen int) error {
+	r.c = make(chan interface{}, chanlen)
 	go func() {
 		for i := range r.c {
 			f(i)
