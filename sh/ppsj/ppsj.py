@@ -13,8 +13,9 @@ content = f.read()
 # print(content)
 
 for x in re.findall(r, content):
-    print(x[0])
-    print(x[1])
+#    print(x[0])
+#    print(x[1])
+    pass
 
 y = 0
 for x in xrange(0, 189):
@@ -22,6 +23,6 @@ for x in xrange(0, 189):
     content = f.read()
     f.close()
     for xx in re.findall(r, content):
-        record = "%s;%s;%s_%s.html" % (xx[1], xx[0], x, y)
+        record = "%s,%s,%s_%s.html,%s_%s.txt" % (xx[1], xx[0], x, y, x, y)
         y = y + 1
         print(record)
