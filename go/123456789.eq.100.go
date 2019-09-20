@@ -10,7 +10,7 @@ var nums = [10]string{"1", "2", "3", "4", "5", "6", "7", "8", "9"}
 // 123 - (456789)
 
 func find(prefix string, index, expect int) {
-	if expect == 0 {
+	if index == 9 && expect == 0 {
 		if prefix[0] == '+' {
 			fmt.Println(prefix[1:])
 		}
