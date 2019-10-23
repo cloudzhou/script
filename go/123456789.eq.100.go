@@ -11,6 +11,7 @@ var max = [10]int{123456789, 23456789, 3456789, 456789, 56789, 6789, 789, 89, 9}
 // 123 - (456789)
 
 func find(prefix string, index, expect int) {
+	fmt.Println("find")
 	if expect > 0 {
 		if max[index] < expect {
 			return
